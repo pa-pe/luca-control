@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS tg_users;
+DROP TABLE IF EXISTS tg_msgs;
+DROP TABLE IF EXISTS web_users;
