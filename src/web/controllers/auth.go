@@ -7,6 +7,7 @@ import (
 	"github.com/pa-pe/luca-control/config"
 	"github.com/pa-pe/luca-control/src/utils"
 	"github.com/pa-pe/luca-control/src/web/models"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,6 +45,7 @@ func AuthRequired(db *gorm.DB, isFirstRun *bool) gin.HandlerFunc {
 
 		isValid, err := checkSession(db, cookie)
 		if err != nil || !isValid {
+			log.Printf("[Web Auth] Fail cookie, ip=%s", c.ClientIP())
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
@@ -70,13 +72,15 @@ func HandleLogin(c *gin.Context, db *gorm.DB) {
 
 	var user models.WebUser
 	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
-		registerFailedLogin(ip)
+		attempts := registerFailedLogin(ip)
+		log.Printf("[Web Auth] Fail username=%s, ip=%s, attempts=%d", username, ip, attempts)
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"error": "Invalid credentials"})
 		return
 	}
 
 	if !utils.CheckStrHash(password, user.Password) {
-		registerFailedLogin(ip)
+		attempts := registerFailedLogin(ip)
+		log.Printf("[Web Auth] Fail password for username=%s, ip=%s, attempts=%d", username, ip, attempts)
 		c.HTML(http.StatusUnauthorized, "login.html", gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -86,9 +90,12 @@ func HandleLogin(c *gin.Context, db *gorm.DB) {
 
 	sessionID, sessionKey, err := createSession(db, user.ID)
 	if err != nil {
+		log.Printf("[Web Auth] Fail with internal server error while createSession, username=%s, ip=%s", username, ip)
 		c.HTML(http.StatusInternalServerError, "login.html", gin.H{"error": "Unable to create session"})
 		return
 	}
+
+	log.Printf("[Web Auth] Success username=%s, ip=%s", username, ip)
 
 	// Setting a cookie with a session ID and key
 	cookieValue := fmt.Sprintf("%d:%s", sessionID, sessionKey)
@@ -189,7 +196,7 @@ func isLoginAllowed(ip string) bool {
 	return true
 }
 
-func registerFailedLogin(ip string) {
+func registerFailedLogin(ip string) int {
 	attemptData := loginAttempt{Count: 1, LastAttempt: time.Now()}
 
 	// update existingAttempt
@@ -200,4 +207,6 @@ func registerFailedLogin(ip string) {
 	}
 
 	loginAttempts.Store(ip, attemptData)
+
+	return attemptData.Count
 }
