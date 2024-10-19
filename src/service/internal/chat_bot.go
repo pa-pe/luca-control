@@ -4,6 +4,8 @@ import (
 	"github.com/pa-pe/luca-control/src/storage"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
+	"strings"
+	"unicode"
 )
 
 type ChatBotImpl struct {
@@ -36,7 +38,8 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		return "", nil
 	}
 
-	answerMsg := c.echo(tgMsg.Text)
+	//	answerMsg := c.echo(tgMsg.Text)
+	answerMsg := c.msgRouter(tgMsg.Text)
 
 	// finish if no answer msg
 	if answerMsg == "" {
@@ -64,6 +67,27 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 	}
 
 	return answerMsg, executeAfterSent
+}
+
+func (c *ChatBotImpl) msgRouter(msg string) string {
+	msgLc := strings.ToLower(msg)
+
+	var builder strings.Builder
+	for _, r := range msgLc {
+		if unicode.IsLetter(r) {
+			builder.WriteRune(r)
+		}
+	}
+
+	msgOnlyLetters := builder.String()
+
+	if msgOnlyLetters == "hello" {
+		return "Hi!"
+	} else if msgOnlyLetters == "hi" {
+		return "Hello!"
+	}
+
+	return "0_o"
 }
 
 func (c *ChatBotImpl) echo(msg string) string {
