@@ -10,17 +10,24 @@ import (
 	"gorm.io/gorm"
 )
 
-// WebController отвечает за обработку запросов веб-интерфейса
 type WebController struct {
 	DB *gorm.DB
 }
 
-// NewWebController создает новый экземпляр WebController
 func NewWebController(db *gorm.DB) *WebController {
 	return &WebController{DB: db}
 }
 
-// ShowTgUsers отображает список пользователей Telegram
+func ShowAuthMain(c *gin.Context) {
+	currentAuthUser := GetCurrentAuthUser(c)
+
+	c.HTML(http.StatusOK, "auth_user_layout.html", gin.H{
+		"Title":       "Main Menu",
+		"CurrentUser": currentAuthUser.Username,
+		"content":     "main.html", // Указание шаблона содержимого
+	})
+}
+
 func (wc *WebController) ShowTgUsers(c *gin.Context) {
 	var users []tgmodels.TgUser
 	result := wc.DB.Find(&users)
@@ -30,10 +37,6 @@ func (wc *WebController) ShowTgUsers(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "tg_users.html", gin.H{"users": users})
-}
-
-func ShowMainMenu(c *gin.Context) {
-	c.HTML(http.StatusOK, "main_menu.html", nil)
 }
 
 func ShowAddUserForm(c *gin.Context) {

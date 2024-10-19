@@ -26,14 +26,17 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 
 	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.html")))
 
-	router.GET("/login", controllers.ShowLoginPage)
+	//router.GET("/login", controllers.ShowLoginPage)
+	router.GET("/login", func(c *gin.Context) { controllers.ShowLoginPage(c, db) })
 	router.POST("/login", func(c *gin.Context) { controllers.HandleLogin(c, db) })
+	router.GET("/logout", func(c *gin.Context) { controllers.HandleLogout(c, db) })
 
 	// Auth users routes
 	authorized := router.Group("/")
 	authorized.Use(controllers.AuthRequired(db, &controllers.IsFirstRun))
 	{
-		authorized.GET("/", controllers.ShowMainMenu)
+		authorized.GET("/", controllers.ShowAuthMain)
+		//		authorized.GET("/logout", controllers.HandleLogout)
 		authorized.GET("/tg_users", func(c *gin.Context) { controllers.ListTgUsers(c, db) })
 		authorized.GET("/web_users", func(c *gin.Context) { controllers.ListWebUsers(c, db) })
 		authorized.GET("/web_users/add", controllers.ShowAddUserForm)

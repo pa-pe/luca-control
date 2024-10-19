@@ -36,16 +36,8 @@ func AuthRequired(db *gorm.DB, isFirstRun *bool) gin.HandlerFunc {
 			return
 		}
 
-		cookie, err := c.Cookie("session")
-		if err != nil {
-			c.Redirect(http.StatusSeeOther, "/login")
-			c.Abort()
-			return
-		}
-
-		isValid, err := checkSession(db, cookie)
-		if err != nil || !isValid {
-			log.Printf("[Web Auth] Fail cookie, ip=%s", c.ClientIP())
+		isAuthorized, _, _ := GetAuth(c, db)
+		if !isAuthorized {
 			c.Redirect(http.StatusSeeOther, "/login")
 			c.Abort()
 			return
@@ -55,7 +47,36 @@ func AuthRequired(db *gorm.DB, isFirstRun *bool) gin.HandlerFunc {
 	}
 }
 
-func ShowLoginPage(c *gin.Context) {
+func GetAuth(c *gin.Context, db *gorm.DB) (bool, *models.WebUser, *models.WebSession) {
+	cookie, err := c.Cookie("session")
+	if err != nil {
+		return false, nil, nil
+	}
+
+	isValid, err, session := checkAndGetSession(db, cookie)
+	if err != nil || !isValid {
+		log.Printf("[Web Auth] Fail cookie, ip=%s", c.ClientIP())
+		return false, nil, nil
+	}
+
+	c.Set("currentAuthSession", session)
+
+	var currentAuthUser models.WebUser
+	if err := db.Where("id = ?", session.WebUserID).First(&currentAuthUser).Error; err != nil {
+		return false, nil, nil
+	}
+	c.Set("currentAuthUser", currentAuthUser)
+
+	return true, &currentAuthUser, session
+}
+
+func ShowLoginPage(c *gin.Context, db *gorm.DB) {
+	isAuthorized, _, _ := GetAuth(c, db)
+	if isAuthorized {
+		c.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+
 	c.HTML(http.StatusOK, "login.html", nil)
 }
 
@@ -97,9 +118,24 @@ func HandleLogin(c *gin.Context, db *gorm.DB) {
 
 	log.Printf("[Web Auth] Success username=%s, ip=%s", username, ip)
 
+	user.Password = "hidden"
+	c.Set("currentAuthUser", user)
+
 	// Setting a cookie with a session ID and key
 	cookieValue := fmt.Sprintf("%d:%s", sessionID, sessionKey)
 	c.SetCookie("session", cookieValue, config.WebAuthSessionDurationInHour*60*60, "/", "", false, true)
+	c.Redirect(http.StatusSeeOther, "/")
+}
+
+func HandleLogout(c *gin.Context, db *gorm.DB) {
+	isAuthorized, currentAuthUser, currenSession := GetAuth(c, db)
+	if isAuthorized {
+		//db.Where("id < ?", currenSession.ID).Delete(currenSession)
+		db.Delete(currenSession)
+		c.SetCookie("session", "", -1, "/", "", false, true) // Удаление куки
+		log.Printf("[Web Auth] Logout username=%s, ip=%s", currentAuthUser.Username, c.ClientIP())
+	}
+
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
@@ -140,36 +176,36 @@ func createSession(db *gorm.DB, userID int) (int, string, error) {
 	return session.ID, sessionKey, nil
 }
 
-func checkSession(db *gorm.DB, cookie string) (bool, error) {
+func checkAndGetSession(db *gorm.DB, cookie string) (bool, error, *models.WebSession) {
 	// Splitting cookies into sessionID and sessionKey
 	parts := strings.SplitN(cookie, ":", 2)
 	if len(parts) != 2 {
-		return false, nil
+		return false, nil, nil
 	}
 
 	sessionID, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
-		return false, nil
+		return false, nil, nil
 	}
 
 	sessionKey := parts[1]
 
 	var session models.WebSession
 	if err := db.Where("id = ?", sessionID).Take(&session).Error; err != nil {
-		return false, err
+		return false, err, nil
 	}
 
 	if time.Now().After(session.ExpiresAt) {
-		return false, nil
+		return false, nil, nil
 	}
 
 	if utils.CheckStrHash(sessionKey, session.SessionKey) != true {
-		return false, nil
+		return false, nil, nil
 	}
 
 	go cleanUpExpiredSessions(db)
 
-	return true, nil
+	return true, nil, &session
 }
 
 func cleanUpExpiredSessions(db *gorm.DB) {
@@ -209,4 +245,16 @@ func registerFailedLogin(ip string) int {
 	loginAttempts.Store(ip, attemptData)
 
 	return attemptData.Count
+}
+
+func GetCurrentAuthUser(c *gin.Context) models.WebUser {
+	cCurrentAuthUser, exists := c.Get("currentAuthUser")
+	if !exists {
+		log.Fatal("GetCurrentAuthUser internal error")
+	}
+	currentAuthUser, ok := cCurrentAuthUser.(models.WebUser)
+	if !ok {
+		log.Fatal("GetCurrentAuthUser internal error with models.WebUser")
+	}
+	return currentAuthUser
 }
