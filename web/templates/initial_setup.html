@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initial Setup</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        function validateForm(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+            const errorMessage = document.getElementById("error-message");
+
+            // Проверка длины пароля
+            if (password.length < 8) {
+                errorMessage.textContent = "Password must be at least 8 characters long.";
+                return;
+            }
+
+            // Проверка совпадения паролей
+            if (password !== confirmPassword) {
+                errorMessage.textContent = "Passwords do not match.";
+                return;
+            }
+
+            // Если все проверки пройдены, отправляем форму
+            errorMessage.textContent = "";
+            event.target.submit();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+            form.addEventListener("submit", validateForm);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mt-5">Initial Setup</h2>
+        <p>Please create the initial admin user.</p>
+        <div id="error-message" class="text-danger mb-3"></div>
+        <form action="/initial-setup" method="post">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Admin User</button>
+        </form>
+    </div>
+</body>
+</html>

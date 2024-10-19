@@ -1,8 +1,8 @@
-// internal/web/controllers/web_controller.go
 package controllers
 
 import (
 	tgmodels "github.com/pa-pe/luca-control/src/storage/model"
+	"github.com/pa-pe/luca-control/src/utils"
 	webmodels "github.com/pa-pe/luca-control/src/web/models"
 	"net/http"
 
@@ -57,7 +57,7 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 	role := c.PostForm("role")
 
 	// Хешируем пароль перед сохранением
-	hashedPassword, err := hashPassword(password)
+	hashedPassword, err := utils.HashStr(password)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error while hashing password")
 		return
