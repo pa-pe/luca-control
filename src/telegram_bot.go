@@ -6,6 +6,7 @@ import (
 	"github.com/pa-pe/luca-control/src/service"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
+	"strings"
 )
 
 type BotImpl struct {
@@ -123,12 +124,22 @@ func (c *TelegramController) ListenForMessages() error {
 			fmt.Printf("\ntg: msgId=%d from=%s[%d] text=%s\n", update.Message.MessageID, update.Message.From.UserName, update.Message.From.ID, msg.Text)
 
 			//			responseMsg := handler.ChatBotMsgProcess(msg.Text)
-			responseMsg, executeAfterSent := c.bot.services.ChatBotMsgRouter.Handle(botUser, user, msg)
+			responseMsg, keyboardStr, executeAfterSent := c.bot.services.ChatBotMsgRouter.Handle(botUser, user, msg)
 
 			// sending a response if the handler gave one
 			if responseMsg != "" {
+
 				fmt.Printf("tg: answer text=%s\n\n", responseMsg)
 				response := tgbotapi.NewMessage(msg.ChatID, responseMsg)
+
+				if keyboardStr == "remove" {
+					removeKeyboard := tgbotapi.NewRemoveKeyboard(true) // true означает, что клавиатура будет удалена для всех пользователей
+					response.ReplyMarkup = removeKeyboard
+				} else if keyboardStr != "" {
+					keyboard := loadKeyboardFromTxt(keyboardStr)
+					response.ReplyMarkup = keyboard
+				}
+
 				sent, err := c.botAPI.Send(response)
 				if err != nil {
 					return err
@@ -142,4 +153,43 @@ func (c *TelegramController) ListenForMessages() error {
 	}
 
 	return nil
+}
+
+func loadKeyboardFromTxt(input string) tgbotapi.ReplyKeyboardMarkup {
+	// Определение, нужно ли включить one_time_keyboard
+	oneTimeKeyboard := strings.Contains(input, "#hide")
+
+	// Удаляем маркер #hide из строки, если он присутствует
+	input = strings.ReplaceAll(input, "#hide", "")
+
+	// Разделяем строки по символу \n
+	rows := strings.Split(input, "\n")
+
+	// Формируем клавиатуру
+	var keyboardRows [][]tgbotapi.KeyboardButton
+	for _, row := range rows {
+		// Разделяем кнопки по символу |
+		buttons := strings.Split(row, "|")
+
+		// Создаем строку с кнопками
+		var keyboardButtons []tgbotapi.KeyboardButton
+		for _, text := range buttons {
+			text = strings.TrimSpace(text)
+			if text != "" {
+				keyboardButtons = append(keyboardButtons, tgbotapi.NewKeyboardButton(text))
+			}
+		}
+
+		// Добавляем строку кнопок, если она не пустая
+		if len(keyboardButtons) > 0 {
+			keyboardRows = append(keyboardRows, keyboardButtons)
+		}
+	}
+
+	// Создание ReplyKeyboardMarkup
+	keyboard := tgbotapi.NewReplyKeyboard(keyboardRows...)
+	keyboard.OneTimeKeyboard = oneTimeKeyboard
+	keyboard.ResizeKeyboard = true
+
+	return keyboard
 }

@@ -11,7 +11,7 @@ type Services struct {
 }
 
 type IChatBotMsg interface {
-	Handle(botUser model.TgUser, tgUser model.TgUser, tgMsg model.TgMsg) (string, func(tgId int64))
+	Handle(botUser model.TgUser, tgUser model.TgUser, tgMsg model.TgMsg) (string, string, func(tgId int64))
 }
 
 func NewServices(storage *storage.Storages) *Services {

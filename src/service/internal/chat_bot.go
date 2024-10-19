@@ -14,12 +14,12 @@ type ChatBotImpl struct {
 }
 
 // Handle returns Msg string and func which needs to be called in case of successful sending the Msg
-func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg model.TgMsg) (string, func(tgId int64)) {
+func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg model.TgMsg) (string, string, func(tgId int64)) {
 
 	_, err := c.telegramStorage.InsertMsg(&tgMsg)
 	if err != nil {
 		log.Print("ChatBot Handle problem")
-		return "", nil
+		return "", "", nil
 	}
 
 	// check once for existence chatBotUser in db
@@ -27,7 +27,7 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		err = c.telegramStorage.CreateUserIfNotExist(&botTgUser)
 		if err != nil {
 			log.Print("ChatBot Handle problem with db insert chatBotTgUser")
-			return "", nil
+			return "", "", nil
 		}
 		c.chatBotUserInserted = true
 	}
@@ -35,15 +35,15 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 	err = c.telegramStorage.CreateUserIfNotExist(&tgUser)
 	if err != nil {
 		log.Print("ChatBot Handle problem with db insert tgUser")
-		return "", nil
+		return "", "", nil
 	}
 
 	//	answerMsg := c.echo(tgMsg.Text)
-	answerMsg := c.msgRouter(tgMsg.Text)
+	answerMsg, keyboardStr := c.msgRouter(tgMsg.Text)
 
 	// finish if no answer msg
 	if answerMsg == "" {
-		return "", nil
+		return "", "", nil
 	}
 
 	tgMsgOut := model.TgMsg{
@@ -54,11 +54,19 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		//		AddedTimestamp: time.Now().Unix(),
 	}
 
+	// insert keyboard info for db store
+	if keyboardStr != "" {
+		tgMsgOut.Text = answerMsg + "\n\nkeyboard:\n" + keyboardStr
+	}
+
 	_, err = c.telegramStorage.InsertMsg(&tgMsgOut)
 	if err != nil {
 		log.Print("ChatBot Handle problem with insert tgMsgOut")
-		return "", nil
+		return "", "", nil
 	}
+
+	// restore msg without keyboard info
+	tgMsgOut.Text = answerMsg
 
 	executeAfterSent := func(tgId int64) {
 		//		log.Print("sent: " + answerMsg)
@@ -66,10 +74,10 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		_ = c.telegramStorage.UpdateTgOutMsgIdAfterSend(&tgMsgOut)
 	}
 
-	return answerMsg, executeAfterSent
+	return answerMsg, keyboardStr, executeAfterSent
 }
 
-func (c *ChatBotImpl) msgRouter(msg string) string {
+func (c *ChatBotImpl) msgRouter(msg string) (string, string) {
 	msgLc := strings.ToLower(msg)
 
 	var builder strings.Builder
@@ -82,12 +90,20 @@ func (c *ChatBotImpl) msgRouter(msg string) string {
 	msgOnlyLetters := builder.String()
 
 	if msgOnlyLetters == "hello" {
-		return "Hi!"
+		return "Hi!", ""
 	} else if msgOnlyLetters == "hi" {
-		return "Hello!"
+		return "Hello!", ""
+	} else if msgLc == "kb" {
+		return "try!", "Кнопка 1|Кнопка 2|\nКнопка 3#hide"
+	} else if msgLc == "kb2" {
+		return "try!", "Remove KB|Hide KB"
+	} else if msg == "Remove KB" {
+		return "removed", "remove"
+	} else if msg == "Hide KB" {
+		return "...", ""
 	}
 
-	return "0_o"
+	return "0_o", ""
 }
 
 func (c *ChatBotImpl) echo(msg string) string {
