@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pa-pe/luca-control/config"
 	"github.com/pa-pe/luca-control/src"
 	"github.com/pa-pe/luca-control/src/service"
 	"github.com/pa-pe/luca-control/src/storage"
@@ -17,26 +18,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type config struct {
-	logDir     string
-	logFile    string
-	tgBotToken string
-}
-
 func main() {
-	curDateTimeStr := time.Now().Format("2006-01-02 15:04:05")
-	cfg := config{logDir: "./logs", logFile: curDateTimeStr + ".log"}
+	curDateTimeStr := time.Now().Format(config.LogFileFormat)
+	logFileName := curDateTimeStr + ".log"
 
 	// setup LogDir
-	if _, err := os.Stat(cfg.logDir); os.IsNotExist(err) {
-		err := os.MkdirAll(cfg.logDir, 0755)
+	if _, err := os.Stat(config.LogDir); os.IsNotExist(err) {
+		err := os.MkdirAll(config.LogDir, 0755)
 		if err != nil {
-			log.Fatalf("Error creating log directory %s: %v", cfg.logDir, err)
+			log.Fatalf("Error creating log directory %s: %v", config.LogDir, err)
 		}
 	}
 
 	// setup LogFile
-	logPath := filepath.Join(cfg.logDir, cfg.logFile)
+	logPath := filepath.Join(config.LogDir, logFileName)
 	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0664)
 	if err != nil {
 		log.Fatalf("Error opening log file %s: %v", logPath, err)
@@ -59,8 +54,8 @@ func main() {
 		os.Exit(0)
 	}()
 
-	cfg.tgBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
-	if cfg.tgBotToken == "" {
+	tgBotToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if tgBotToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN is empty")
 	}
 
@@ -79,7 +74,7 @@ func main() {
 	storages := storage.NewStorages(dbConn)
 	services := service.NewServices(storages)
 
-	tgBot := src.NewTelegramBot(cfg.tgBotToken, services)
+	tgBot := src.NewTelegramBot(tgBotToken, services)
 	go tgBot.ListenAndServ()
 
 	router := gin.Default()
