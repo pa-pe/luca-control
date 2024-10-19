@@ -38,6 +38,11 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 
 	answerMsg := c.echo(tgMsg.Text)
 
+	// finish if no answer msg
+	if answerMsg == "" {
+		return "", nil
+	}
+
 	tgMsgOut := model.TgMsg{
 		ChatID:     tgMsg.ChatID,
 		TgUserID:   botTgUser.ID,
@@ -46,7 +51,6 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		//		AddedTimestamp: time.Now().Unix(),
 	}
 
-	//tgMsgOut.InternalID, err = c.telegramStorage.InsertMsg(&tgMsgOut)
 	_, err = c.telegramStorage.InsertMsg(&tgMsgOut)
 	if err != nil {
 		log.Print("ChatBot Handle problem with insert tgMsgOut")
