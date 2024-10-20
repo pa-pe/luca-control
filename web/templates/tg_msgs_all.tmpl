@@ -12,8 +12,9 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>TgUserID</th>
-                    <th>ChatID</th>
+                    <!-- th>TgUserID</th -->
+                    <th>UserName</th>
+                    <!-- th>ChatID</th -->
                     <th>Text</th>
                     <th>tg date</th>
                     <th>server date</th>
@@ -22,8 +23,9 @@
             <tbody>
                 {{range .tgMsgs}}
                 <tr>
-                    <td>{{.TgUserID}}</td>
-                    <td>{{.ChatID}}</td>
+                    <!-- td>{{.TgUserID}}</td -->
+                    <td>{{.UserName}}</td>
+                    <!-- td>{{.ChatID}}</td -->
                     <td>{{.Text}}</td>
                     <td class="timestamp">{{.Date}}</td>
                     <td class="timestamp">{{.AddedTimestamp}}</td>
