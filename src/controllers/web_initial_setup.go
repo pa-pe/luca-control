@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pa-pe/luca-control/src/storage/model"
 	"github.com/pa-pe/luca-control/src/utils"
-	"github.com/pa-pe/luca-control/src/web/models"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -23,7 +23,7 @@ func HandleInitialSetup(c *gin.Context, db *gorm.DB) {
 	password := c.PostForm("password")
 
 	// Check if the user already exists
-	var existingUser models.WebUser
+	var existingUser model.WebUser
 	if err := db.Where("username = ?", username).First(&existingUser).Error; err == nil {
 		c.HTML(http.StatusConflict, "initial_setup.html", gin.H{"error": "User already exists"})
 		return
@@ -37,7 +37,7 @@ func HandleInitialSetup(c *gin.Context, db *gorm.DB) {
 	}
 
 	// Create the admin user
-	newUser := models.WebUser{
+	newUser := model.WebUser{
 		Username: username,
 		Password: hashedPassword,
 		Role:     "admin",

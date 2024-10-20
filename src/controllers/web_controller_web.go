@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"github.com/pa-pe/luca-control/src/storage/model"
 	"github.com/pa-pe/luca-control/src/utils"
-	"github.com/pa-pe/luca-control/src/web/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +29,7 @@ func ShowAuthMain(c *gin.Context) {
 func ListWebUsers(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
 
-	var webUsers []models.WebUser
+	var webUsers []model.WebUser
 	if err := db.Find(&webUsers).Error; err != nil {
 		c.String(http.StatusInternalServerError, "Error retrieving web users")
 		return
@@ -75,7 +75,7 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	newUser := models.WebUser{
+	newUser := model.WebUser{
 		Username: username,
 		Password: hashedPassword,
 		Role:     role,

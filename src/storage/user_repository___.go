@@ -1,7 +1,7 @@
 package storage
 
 import (
-	webmodels "github.com/pa-pe/luca-control/src/web/models"
+	webmodels "github.com/pa-pe/luca-control/src/storage/model"
 )
 
 type UserRepository interface {

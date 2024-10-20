@@ -1,4 +1,4 @@
-package models
+package model
 
 type WebUser struct {
 	ID             int    `gorm:"primaryKey;autoIncrement" json:"id"`

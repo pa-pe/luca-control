@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/pa-pe/luca-control/src/web/models"
+	"github.com/pa-pe/luca-control/src/storage/model"
 	"gorm.io/gorm"
 )
 
@@ -13,20 +13,20 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{db: db}
 }
 
-func (r *UserRepositoryImpl) CreateUser(user *models.WebUser) error {
+func (r *UserRepositoryImpl) CreateUser(user *model.WebUser) error {
 	return r.db.Create(user).Error
 }
 
-func (r *UserRepositoryImpl) GetUserByID(id uint) (*models.WebUser, error) {
-	var user models.WebUser
+func (r *UserRepositoryImpl) GetUserByID(id uint) (*model.WebUser, error) {
+	var user model.WebUser
 	if err := r.db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *UserRepositoryImpl) ListUsers() ([]*models.WebUser, error) {
-	var users []*models.WebUser
+func (r *UserRepositoryImpl) ListUsers() ([]*model.WebUser, error) {
+	var users []*model.WebUser
 	if err := r.db.Find(&users).Error; err != nil {
 		return nil, err
 	}

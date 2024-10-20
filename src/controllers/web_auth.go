@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/pa-pe/luca-control/config"
+	"github.com/pa-pe/luca-control/src/storage/model"
 	"github.com/pa-pe/luca-control/src/utils"
-	"github.com/pa-pe/luca-control/src/web/models"
 	"log"
 	"net/http"
 	"strconv"
@@ -47,7 +47,7 @@ func AuthRequired(db *gorm.DB, isFirstRun *bool) gin.HandlerFunc {
 	}
 }
 
-func GetAuth(c *gin.Context, db *gorm.DB) (bool, *models.WebUser, *models.WebSession) {
+func GetAuth(c *gin.Context, db *gorm.DB) (bool, *model.WebUser, *model.WebSession) {
 	cookie, err := c.Cookie("session")
 	if err != nil {
 		return false, nil, nil
@@ -61,7 +61,7 @@ func GetAuth(c *gin.Context, db *gorm.DB) (bool, *models.WebUser, *models.WebSes
 
 	c.Set("currentAuthSession", session)
 
-	var currentAuthUser models.WebUser
+	var currentAuthUser model.WebUser
 	if err := db.Where("id = ?", session.WebUserID).First(&currentAuthUser).Error; err != nil {
 		return false, nil, nil
 	}
@@ -91,7 +91,7 @@ func HandleLogin(c *gin.Context, db *gorm.DB) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	var user models.WebUser
+	var user model.WebUser
 	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
 		attempts := registerFailedLogin(ip)
 		log.Printf("[Web Auth] Fail username=%s, ip=%s, attempts=%d", username, ip, attempts)
@@ -162,7 +162,7 @@ func createSession(db *gorm.DB, userID int) (int, string, error) {
 
 	expiresAt := time.Now().Add(config.WebAuthSessionDurationInHour * time.Hour)
 
-	session := models.WebSession{
+	session := model.WebSession{
 		WebUserID:  userID,
 		SessionKey: hashedKey,
 		CreatedAt:  time.Now(),
@@ -176,7 +176,7 @@ func createSession(db *gorm.DB, userID int) (int, string, error) {
 	return session.ID, sessionKey, nil
 }
 
-func checkAndGetSession(db *gorm.DB, cookie string) (bool, error, *models.WebSession) {
+func checkAndGetSession(db *gorm.DB, cookie string) (bool, error, *model.WebSession) {
 	// Splitting cookies into sessionID and sessionKey
 	parts := strings.SplitN(cookie, ":", 2)
 	if len(parts) != 2 {
@@ -190,7 +190,7 @@ func checkAndGetSession(db *gorm.DB, cookie string) (bool, error, *models.WebSes
 
 	sessionKey := parts[1]
 
-	var session models.WebSession
+	var session model.WebSession
 	if err := db.Where("id = ?", sessionID).Take(&session).Error; err != nil {
 		return false, err, nil
 	}
@@ -209,7 +209,7 @@ func checkAndGetSession(db *gorm.DB, cookie string) (bool, error, *models.WebSes
 }
 
 func cleanUpExpiredSessions(db *gorm.DB) {
-	db.Where("expires_at < ?", time.Now()).Delete(&models.WebSession{})
+	db.Where("expires_at < ?", time.Now()).Delete(&model.WebSession{})
 }
 
 // Checking if login attempt is allowed
@@ -247,12 +247,12 @@ func registerFailedLogin(ip string) int {
 	return attemptData.Count
 }
 
-func GetCurrentAuthUser(c *gin.Context) models.WebUser {
+func GetCurrentAuthUser(c *gin.Context) model.WebUser {
 	cCurrentAuthUser, exists := c.Get("currentAuthUser")
 	if !exists {
 		log.Fatal("GetCurrentAuthUser internal error")
 	}
-	currentAuthUser, ok := cCurrentAuthUser.(models.WebUser)
+	currentAuthUser, ok := cCurrentAuthUser.(model.WebUser)
 	if !ok {
 		log.Fatal("GetCurrentAuthUser internal error with models.WebUser")
 	}

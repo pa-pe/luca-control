@@ -5,7 +5,6 @@ import (
 	"github.com/pa-pe/luca-control/src"
 	"github.com/pa-pe/luca-control/src/service"
 	"github.com/pa-pe/luca-control/src/storage"
-	"github.com/pa-pe/luca-control/src/web"
 	"log"
 	"os"
 	"os/signal"
@@ -78,7 +77,7 @@ func main() {
 	go tgBot.ListenAndServ()
 
 	router := gin.Default()
-	web.SetupRoutes(router, dbConn)
+	src.SetupRoutes(router, dbConn)
 
 	log.Fatal(router.Run(":" + config.WebServerPort))
 }
