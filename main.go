@@ -80,5 +80,5 @@ func main() {
 	router := gin.Default()
 	web.SetupRoutes(router, dbConn)
 
-	log.Fatal(router.Run(":8080"))
+	log.Fatal(router.Run(":" + config.WebServerPort))
 }

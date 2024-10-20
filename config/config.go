@@ -8,4 +8,5 @@ const (
 	WebAuthMaxAttempts           = 10
 	WebAuthAttemptResetDuration  = 5 * time.Minute
 	WebAuthSessionDurationInHour = 7 * 24
+	WebServerPort                = "35353"
 )
