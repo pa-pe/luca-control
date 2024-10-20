@@ -38,10 +38,11 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		authorized.GET("/", controllers.ShowAuthMain)
 		//		authorized.GET("/logout", controllers.HandleLogout)
-		authorized.GET("/tg_users", func(c *gin.Context) { controllers.ListTgUsers(c, db) })
 		authorized.GET("/web_users", func(c *gin.Context) { controllers.ListWebUsers(c, db) })
 		authorized.GET("/web_users/add", controllers.ShowAddWebUserForm)
 		authorized.POST("/web_users/add", func(c *gin.Context) { controllers.AddWebUserHandler(c, db) })
+		authorized.GET("/tg_users", func(c *gin.Context) { controllers.ListTgUsers(c, db) })
+		authorized.GET("/tg_msgs_all", func(c *gin.Context) { controllers.ListTgMsgsAll(c, db) })
 	}
 
 	// Show initial setup page if it's the first run

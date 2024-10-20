@@ -105,3 +105,19 @@ func ListTgUsers(c *gin.Context, db *gorm.DB) {
 		"tgUsers":     tgUsers,
 	})
 }
+
+func ListTgMsgsAll(c *gin.Context, db *gorm.DB) {
+	currentAuthUser := GetCurrentAuthUser(c)
+
+	var tgMsgs []tgmodels.TgMsg
+	if err := db.Find(&tgMsgs).Error; err != nil {
+		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
+		return
+	}
+
+	c.HTML(http.StatusOK, "tg_msgs_all.tmpl", gin.H{
+		"Title":       "All Telegram Messages",
+		"CurrentUser": currentAuthUser.Username,
+		"tgMsgs":      tgMsgs,
+	})
+}
