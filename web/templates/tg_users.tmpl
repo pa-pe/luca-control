@@ -1,6 +1,134 @@
 {{ template "header_auth" . }}
 {{ template "js_timestamp_converter" . }}
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+function updateField(event, model, ID, field, value, displayValue, element) {
+    const anim_time = 500; //ms
+    const dropdown = element.closest('.dropdown');
+    const dropdownButton = element.closest('.dropdown').querySelector('.dropdown-toggle');
+    const dropdownContainer = dropdown.parentNode;
+    const tagCont = dropdownContainer;
+    const iconSuccess = '<i class="bi-check-circle" style="color: green;"></i>';
+    const iconLoading = '<i class="bi-arrow-repeat" style="color: blue;"></i>';
+    const iconFail = '<i class="bi-x-circle" style="color: red;"></i>';
+//    dropdownButton.textContent = value === 1 ? 'Permit' : 'No';
+    dropdownButton.textContent = displayValue;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    $( dropdown ).find(".dropdown-menu").removeClass("show"); // close dropdown-menu after stopImmediatePropagation
+
+    // create statusContainer
+    let statusContainerId = 'status-container-' + field + ID;
+    let statusContainer = document.getElementById(statusContainerId);
+    if (!statusContainer) {
+        statusContainer = document.createElement('div');
+        statusContainer.id = statusContainerId;
+        statusContainer.style.display="none";
+        dropdownContainer.appendChild(statusContainer);
+    }
+
+    let query_result = -1;
+
+    function showQueuedAnim(name, tagCont, doFunc){
+        if ($(tagCont).hasClass("change_animation_progress")){
+//            console.log("showQueuedAnim "+name+" next");
+            setTimeout(showQueuedAnim, 100, name, tagCont, doFunc);
+            return;
+        }
+
+//        console.log("showQueuedAnim "+name+" done");
+        doFunc();
+    }
+
+    dropdown.animHide = function(){
+        $(tagCont).addClass("change_animation_progress");
+        $( dropdown ).animate({ opacity: 0 }, anim_time, function(){
+            dropdown.style.display="none";
+            $(tagCont).removeClass("change_animation_progress");
+        });
+    }
+
+    dropdown.animShow = function(){
+        showQueuedAnim("dropdown.animShow", tagCont, function(){
+            dropdown.style.display="block";
+            $(tagCont).addClass("change_animation_progress");
+            $( dropdown ).animate({ opacity: 1 }, anim_time, function(){
+                $(tagCont).removeClass("change_animation_progress");
+            });
+        });
+    }
+
+    statusContainer.animHide = function(){
+        if (statusContainer.style.display != "none"){
+            showQueuedAnim("hide-cont", tagCont, function(){
+                $(tagCont).addClass("change_animation_progress");
+                $( statusContainer ).animate({ opacity: 0 }, anim_time, function(){
+                    statusContainer.style.display="none";
+                    statusContainer.innerHTML = '';
+                    $(tagCont).removeClass("change_animation_progress");
+                });
+            });
+        }
+    }
+
+     statusContainer.animShow = function(iconTag){
+        statusContainer.animHide();
+
+        showQueuedAnim("show-success", tagCont, function(){
+            $(tagCont).addClass("change_animation_progress");
+            statusContainer.style.opacity = "0";
+            statusContainer.innerHTML = iconTag;
+            statusContainer.style.display="block";
+            $( statusContainer ).animate({ opacity: 1 }, anim_time, function(){
+                $(tagCont).removeClass("change_animation_progress");
+
+                if (iconTag == iconSuccess){
+                    statusContainer.animHide();
+                    dropdown.animShow();
+                }
+            });
+        });
+    }
+
+
+    fetch('/update_model', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "model": model, "id": ID, [field]: value }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            query_result = 1;
+            statusContainer.animShow(iconSuccess);
+        } else {
+            query_result = 0;
+            statusContainer.animShow(iconFail);
+            alert('Failed to update: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        query_result = 0;
+        statusContainer.animShow(iconFail);
+        alert('Error: ' + error);
+    });
+
+
+    dropdown.animHide();
+    showQueuedAnim("chk-loading", tagCont, function(){
+        if (query_result == -1){
+            statusContainer.animShow(iconLoading);
+        }
+    });
+
+}
+</script>
+
+
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -17,7 +145,7 @@
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>&nbsp;</th>
-                    <th>Chatbot Permit</th>
+                    <th>Chatbot</th>
                     <th>Chatbot State</th>
                     <th>Shift State</th>
                     <th>Added</th>
@@ -31,7 +159,19 @@
                     <td>{{.FirstName}}</td>
                     <td>{{.LastName}}</td>
                     <td>{{.LanguageCode}}</td>
-                    <td>{{.ChatbotPermit}}</td>
+                    <td>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ .ID }}" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ if eq .ChatbotPermit 0 }}No{{ else }}Permit{{ end }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ .ID }}">
+                <li><a class="dropdown-item" href="#" onclick="updateField(event, 'TgUser', {{ .ID }}, 'chatbot_permit', 1, 'Permit', this)">Permit</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateField(event, 'TgUser', {{ .ID }}, 'chatbot_permit', 0, 'No', this)">No</a></li>
+                <!-- li><a class="dropdown-item" href="#" onclick="setChatbotPermitValue({{ .ID }}, 0, this)">No</a></li -->
+            </ul>
+        </div>
+
+                    </td>
                     <td>{{.ChatbotState}}</td>
                     <td>{{.ShiftState}}</td>
                     <td class="timestamp">{{.AddedTimestamp}}</td>

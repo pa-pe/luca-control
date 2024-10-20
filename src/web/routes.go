@@ -43,6 +43,8 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 		authorized.POST("/web_users/add", func(c *gin.Context) { controllers.AddWebUserHandler(c, db) })
 		authorized.GET("/tg_users", func(c *gin.Context) { controllers.ListTgUsers(c, db) })
 		authorized.GET("/tg_msgs_all", func(c *gin.Context) { controllers.ListTgMsgsAll(c, db) })
+
+		authorized.POST("/update_model", func(c *gin.Context) { controllers.UpdateModel(c, db) })
 	}
 
 	// Show initial setup page if it's the first run
