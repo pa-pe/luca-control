@@ -1,0 +1,13 @@
+{{ define "js_timestamp_converter" }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var elements = document.querySelectorAll(".timestamp");
+        elements.forEach(function(element) {
+            var unixTimestamp = parseInt(element.innerText, 10);
+            var localDate = dayjs.unix(unixTimestamp).format("YYYY-MM-DD HH:mm");
+            element.innerText = localDate;
+        });
+    });
+</script>
+{{ end }}

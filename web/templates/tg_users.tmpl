@@ -1,0 +1,42 @@
+{{ template "header_auth" . }}
+{{ template "js_timestamp_converter" . }}
+
+<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ .Title }}</li>
+  </ol>
+</nav>
+
+        <h2>{{ .Title }}</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User Name</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>&nbsp;</th>
+                    <th>Chatbot Permit</th>
+                    <th>Chatbot State</th>
+                    <th>Shift State</th>
+                    <th>Added</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .tgUsers}}
+                <tr>
+                    <td>{{.ID}}</td>
+                    <td>{{.UserName}}</td>
+                    <td>{{.FirstName}}</td>
+                    <td>{{.LastName}}</td>
+                    <td>{{.LanguageCode}}</td>
+                    <td>{{.ChatbotPermit}}</td>
+                    <td>{{.ChatbotState}}</td>
+                    <td>{{.ShiftState}}</td>
+                    <td class="timestamp">{{.AddedTimestamp}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+{{ template "footer" . }}

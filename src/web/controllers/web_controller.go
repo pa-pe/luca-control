@@ -21,36 +21,47 @@ func NewWebController(db *gorm.DB) *WebController {
 func ShowAuthMain(c *gin.Context) {
 	currentAuthUser := GetCurrentAuthUser(c)
 
-	c.HTML(http.StatusOK, "auth_user_layout.html", gin.H{
+	c.HTML(http.StatusOK, "auth_main.tmpl", gin.H{
 		"Title":       "Main Menu",
 		"CurrentUser": currentAuthUser.Username,
-		"content":     "main.html", // Указание шаблона содержимого
 	})
 }
 
-func (wc *WebController) ShowTgUsers(c *gin.Context) {
-	var users []tgmodels.TgUser
-	result := wc.DB.Find(&users)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения данных"})
+func ListWebUsers(c *gin.Context, db *gorm.DB) {
+	currentAuthUser := GetCurrentAuthUser(c)
+
+	var webUsers []webmodels.WebUser
+	if err := db.Find(&webUsers).Error; err != nil {
+		c.String(http.StatusInternalServerError, "Error retrieving web users")
 		return
 	}
 
-	c.HTML(http.StatusOK, "tg_users.html", gin.H{"users": users})
+	c.HTML(http.StatusOK, "web_users.tmpl", gin.H{
+		"Title":       "Web Users",
+		"CurrentUser": currentAuthUser.Username,
+		"webUsers":    webUsers,
+	})
 }
 
-func ShowAddUserForm(c *gin.Context) {
-	userRole, exists := c.Get("user_role")
-	if !exists || userRole != "admin" {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
-	c.HTML(http.StatusOK, "add_user.html", nil)
+func ShowAddWebUserForm(c *gin.Context) {
+	currentAuthUser := GetCurrentAuthUser(c)
+	//userRole, exists := c.Get("user_role")
+	//if !exists || userRole != "admin" {
+	//	c.AbortWithStatus(http.StatusForbidden)
+	//	return
+	//}
+
+	c.HTML(http.StatusOK, "web_user_add.tmpl", gin.H{
+		"Title":       "Add New Web User",
+		"CurrentUser": currentAuthUser.Username,
+	})
 }
 
 func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
-	userRole, exists := c.Get("user_role")
-	if !exists || userRole != "admin" {
+	currentAuthUser := GetCurrentAuthUser(c)
+	//	userRole, exists := c.Get("user_role")
+	//	if !exists || userRole != "admin" {
+	if currentAuthUser.Role != "admin" {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
@@ -59,7 +70,6 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 	password := c.PostForm("password")
 	role := c.PostForm("role")
 
-	// Хешируем пароль перед сохранением
 	hashedPassword, err := utils.HashStr(password)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error while hashing password")
@@ -81,25 +91,17 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 }
 
 func ListTgUsers(c *gin.Context, db *gorm.DB) {
+	currentAuthUser := GetCurrentAuthUser(c)
+
 	var tgUsers []tgmodels.TgUser
 	if err := db.Find(&tgUsers).Error; err != nil {
 		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
 		return
 	}
 
-	c.HTML(http.StatusOK, "tg_users.html", gin.H{
-		"tgUsers": tgUsers,
-	})
-}
-
-func ListWebUsers(c *gin.Context, db *gorm.DB) {
-	var webUsers []webmodels.WebUser
-	if err := db.Find(&webUsers).Error; err != nil {
-		c.String(http.StatusInternalServerError, "Error retrieving web users")
-		return
-	}
-
-	c.HTML(http.StatusOK, "web_users.html", gin.H{
-		"webUsers": webUsers,
+	c.HTML(http.StatusOK, "tg_users.tmpl", gin.H{
+		"Title":       "Telegram Users",
+		"CurrentUser": currentAuthUser.Username,
+		"tgUsers":     tgUsers,
 	})
 }

@@ -24,7 +24,8 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 		log.Fatalf("Could not set trusted proxies: %v", err)
 	}
 
-	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.html")))
+	//	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.html")))
+	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.*")))
 
 	//router.GET("/login", controllers.ShowLoginPage)
 	router.GET("/login", func(c *gin.Context) { controllers.ShowLoginPage(c, db) })
@@ -39,7 +40,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 		//		authorized.GET("/logout", controllers.HandleLogout)
 		authorized.GET("/tg_users", func(c *gin.Context) { controllers.ListTgUsers(c, db) })
 		authorized.GET("/web_users", func(c *gin.Context) { controllers.ListWebUsers(c, db) })
-		authorized.GET("/web_users/add", controllers.ShowAddUserForm)
+		authorized.GET("/web_users/add", controllers.ShowAddWebUserForm)
 		authorized.POST("/web_users/add", func(c *gin.Context) { controllers.AddWebUserHandler(c, db) })
 	}
 
