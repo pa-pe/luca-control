@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	tgmodels "github.com/pa-pe/luca-control/src/storage/model"
 	"github.com/pa-pe/luca-control/src/utils"
-	webmodels "github.com/pa-pe/luca-control/src/web/models"
+	"github.com/pa-pe/luca-control/src/web/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +13,9 @@ type WebController struct {
 	DB *gorm.DB
 }
 
-func NewWebController(db *gorm.DB) *WebController {
-	return &WebController{DB: db}
-}
+//func NewWebController(db *gorm.DB) *WebController {
+//	return &WebController{DB: db}
+//}
 
 func ShowAuthMain(c *gin.Context) {
 	currentAuthUser := GetCurrentAuthUser(c)
@@ -30,7 +29,7 @@ func ShowAuthMain(c *gin.Context) {
 func ListWebUsers(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
 
-	var webUsers []webmodels.WebUser
+	var webUsers []models.WebUser
 	if err := db.Find(&webUsers).Error; err != nil {
 		c.String(http.StatusInternalServerError, "Error retrieving web users")
 		return
@@ -76,7 +75,7 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	newUser := webmodels.WebUser{
+	newUser := models.WebUser{
 		Username: username,
 		Password: hashedPassword,
 		Role:     role,
@@ -88,36 +87,4 @@ func AddWebUserHandler(c *gin.Context, db *gorm.DB) {
 	}
 
 	c.Redirect(http.StatusSeeOther, "/web_users")
-}
-
-func ListTgUsers(c *gin.Context, db *gorm.DB) {
-	currentAuthUser := GetCurrentAuthUser(c)
-
-	var tgUsers []tgmodels.TgUser
-	if err := db.Find(&tgUsers).Error; err != nil {
-		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
-		return
-	}
-
-	c.HTML(http.StatusOK, "tg_users.tmpl", gin.H{
-		"Title":       "Telegram Users",
-		"CurrentUser": currentAuthUser.Username,
-		"tgUsers":     tgUsers,
-	})
-}
-
-func ListTgMsgsAll(c *gin.Context, db *gorm.DB) {
-	currentAuthUser := GetCurrentAuthUser(c)
-
-	var tgMsgs []tgmodels.TgMsg
-	if err := db.Find(&tgMsgs).Error; err != nil {
-		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
-		return
-	}
-
-	c.HTML(http.StatusOK, "tg_msgs_all.tmpl", gin.H{
-		"Title":       "All Telegram Messages",
-		"CurrentUser": currentAuthUser.Username,
-		"tgMsgs":      tgMsgs,
-	})
 }
