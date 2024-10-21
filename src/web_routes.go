@@ -45,7 +45,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 		authorized.GET("/tg_msgs_all", func(c *gin.Context) { controllers.ListTgMsgsAll(c, db) })
 
 		authorized.POST("/update_model", func(c *gin.Context) { controllers.UpdateModel(c, db) })
-		authorized.GET("/render_table", func(c *gin.Context) { controllers.RenderModel(c, db) })
+		authorized.GET("/render_table/:modelName", func(c *gin.Context) { controllers.RenderModel(c, db) })
 	}
 
 	// Show initial setup page if it's the first run

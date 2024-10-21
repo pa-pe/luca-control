@@ -25,13 +25,14 @@ var modelConfigs map[string]modelConfig
 
 func RenderModel(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
+	modelName := c.Param("modelName")
 
 	err := loadModelConfig("config/renderModelTable.json")
 	if err != nil {
 		fmt.Println("Ошибка загрузки конфигурации:", err)
 	}
 
-	modelName := "DbChanges"
+	//modelName:= "DbChanges"
 	htmlTable, err := RenderModelTable(db, modelName)
 	if err != nil {
 		fmt.Println("Ошибка:", err)
