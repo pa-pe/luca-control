@@ -29,17 +29,14 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 
 	err := loadModelConfig("config/renderModelTable.json")
 	if err != nil {
-		fmt.Println("Ошибка загрузки конфигурации:", err)
+		c.String(http.StatusInternalServerError, "Error loading RenderModel configuration")
 	}
 
-	//modelName:= "DbChanges"
 	htmlTable, err := RenderModelTable(db, modelName)
 	if err != nil {
 		fmt.Println("Ошибка:", err)
-		c.String(http.StatusInternalServerError, "Error retrieving data from "+modelName)
+		c.String(http.StatusNotFound, "RenderModel "+modelName+" not found")
 		return
-		//} else {
-		//	fmt.Println(htmlTable)
 	}
 
 	c.HTML(http.StatusOK, "render_model_table.tmpl", gin.H{
