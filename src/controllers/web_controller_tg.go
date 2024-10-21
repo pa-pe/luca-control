@@ -38,6 +38,7 @@ func ListTgMsgsAll(c *gin.Context, db *gorm.DB) {
 	if err := db.Table("tg_msgs").
 		Select("tg_msgs.internal_id, tg_msgs.tg_id, tg_msgs.tg_user_id, tg_users.user_name, tg_msgs.chat_id, tg_msgs.reply_to_message_id, tg_msgs.is_outgoing, tg_msgs.text, tg_msgs.date, tg_msgs.added_timestamp").
 		Joins("left join tg_users on tg_msgs.tg_user_id = tg_users.id").
+		Order("internal_id DESC").
 		Scan(&tgMsgWithUserName).Error; err != nil {
 		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
 		return
