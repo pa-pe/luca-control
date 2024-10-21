@@ -1,0 +1,12 @@
+{
+  "DbChanges": {
+    "fields": ["ID", "WebUserID", "ModelName", "DataFrom", "DataTo", "AddedTimestamp"],
+    "headers": {
+      "_WebUserID": "User ID",
+      "ModelName": "Model.Field",
+      "DataFrom": "Original Data",
+      "DataTo": "Updated Data",
+      "AddedTimestamp": "Date"
+    }
+  }
+}
