@@ -3,23 +3,32 @@ package src
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/pa-pe/luca-control/src/service"
+	//	"github.com/pa-pe/luca-control/src/service"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
 	"strings"
 )
 
 type BotImpl struct {
-	token    string
-	services *service.Services
+	token string
+	//	services *service.Services
+	Handler      func(botTgUser model.TgUser, tgUser model.TgUser, tgMsg model.TgMsg) (string, string, func(tgId int64))
+	TgController *TelegramController
 }
 
-func NewTelegramBot(token string, services *service.Services) *BotImpl {
-	return &BotImpl{token: token, services: services}
+//	func NewTelegramBot(token string, services *service.Services) *BotImpl {
+//		return &BotImpl{token: token, services: services}
+func NewTelegramBot(token string) *BotImpl {
+	return &BotImpl{token: token}
 }
 
 func (bot *BotImpl) ListenAndServ() {
+	if bot.Handler == nil {
+		log.Fatal("telegram handler is nil, fill it before run ListenAndServ()")
+	}
+
 	tgController, err := NewTelegramController(bot)
+	bot.TgController = tgController
 	if err != nil {
 		//		log.Fatalf("Error creating Telegram tgController: %v", err)
 		log.Fatalf("Error creating Telegram tgController: %v", err)
@@ -124,7 +133,8 @@ func (c *TelegramController) ListenForMessages() error {
 			fmt.Printf("\ntg: msgId=%d from=%s[%d] text=%s\n", update.Message.MessageID, update.Message.From.UserName, update.Message.From.ID, msg.Text)
 
 			//			responseMsg := handler.ChatBotMsgProcess(msg.Text)
-			responseMsg, keyboardStr, executeAfterSent := c.bot.services.ChatBotMsgRouter.Handle(botUser, user, msg)
+			//			responseMsg, keyboardStr, executeAfterSent := c.bot.services.ChatBotMsgRouter.Handle(botUser, user, msg)
+			responseMsg, keyboardStr, executeAfterSent := c.bot.Handler(botUser, user, msg)
 
 			// sending a response if the handler gave one
 			if responseMsg != "" {
@@ -153,6 +163,23 @@ func (c *TelegramController) ListenForMessages() error {
 	}
 
 	return nil
+}
+
+func (c *TelegramController) SendMessage(chatID int64, text string, keyboardStr string) error {
+	response := tgbotapi.NewMessage(chatID, text)
+
+	// Настройка клавиатуры
+	if keyboardStr == "remove" {
+		removeKeyboard := tgbotapi.NewRemoveKeyboard(true) // true означает, что клавиатура будет удалена для всех пользователей
+		response.ReplyMarkup = removeKeyboard
+	} else if keyboardStr != "" {
+		keyboard := loadKeyboardFromTxt(keyboardStr)
+		response.ReplyMarkup = keyboard
+	}
+
+	// Отправка сообщения
+	_, err := c.botAPI.Send(response)
+	return err
 }
 
 func loadKeyboardFromTxt(input string) tgbotapi.ReplyKeyboardMarkup {

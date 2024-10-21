@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/pa-pe/luca-control/src"
 	"github.com/pa-pe/luca-control/src/storage"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
@@ -10,6 +11,7 @@ import (
 
 type ChatBotImpl struct {
 	telegramStorage     storage.ITelegram
+	tgBot               *src.BotImpl
 	chatBotUserInserted bool
 }
 
@@ -39,7 +41,7 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 	}
 
 	//	answerMsg := c.echo(tgMsg.Text)
-	answerMsg, keyboardStr := c.msgRouter(tgMsg.Text)
+	answerMsg, keyboardStr := c.msgRouter(&tgMsg)
 
 	// finish if no answer msg
 	if answerMsg == "" {
@@ -77,7 +79,8 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 	return answerMsg, keyboardStr, executeAfterSent
 }
 
-func (c *ChatBotImpl) msgRouter(msg string) (string, string) {
+func (c *ChatBotImpl) msgRouter(tgMsg *model.TgMsg) (string, string) {
+	msg := tgMsg.Text
 	msgLc := strings.ToLower(msg)
 
 	var builder strings.Builder
@@ -93,6 +96,8 @@ func (c *ChatBotImpl) msgRouter(msg string) (string, string) {
 		return "Hi!", ""
 	} else if msgOnlyLetters == "hi" {
 		return "Hello!", ""
+	} else if msgLc == "/start" {
+		HandleCmdStart()
 	} else if msgLc == "kb" {
 		return "try!", "Кнопка 1|Кнопка 2|\nКнопка 3#hide"
 	} else if msgLc == "kb2" {
@@ -101,6 +106,9 @@ func (c *ChatBotImpl) msgRouter(msg string) (string, string) {
 		return "removed", "remove"
 	} else if msg == "Hide KB" {
 		return "...", ""
+	} else if msg == "msg" {
+		c.tgBot.TgController.SendMessage(tgMsg.ChatID, ";)", "")
+		return "done", ""
 	}
 
 	return "0_o", ""
@@ -110,9 +118,15 @@ func (c *ChatBotImpl) echo(msg string) string {
 	return "Echo: " + msg
 }
 
-func NewChatBotService(telegramStorage storage.ITelegram) *ChatBotImpl {
+func HandleCmdStart() string {
+	answer := "Hello! Please wait for permission to continue."
+	return answer
+}
+
+func NewChatBotService(telegramStorage storage.ITelegram, tgBot *src.BotImpl) *ChatBotImpl {
 	return &ChatBotImpl{
 		telegramStorage:     telegramStorage,
+		tgBot:               tgBot,
 		chatBotUserInserted: false,
 	}
 }

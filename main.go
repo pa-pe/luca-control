@@ -70,10 +70,12 @@ func main() {
 
 	storage.RunMigrations(db)
 
-	storages := storage.NewStorages(dbConn)
-	services := service.NewServices(storages)
+	tgBot := src.NewTelegramBot(tgBotToken)
 
-	tgBot := src.NewTelegramBot(tgBotToken, services)
+	storages := storage.NewStorages(dbConn)
+	services := service.NewServices(storages, tgBot)
+
+	tgBot.Handler = services.ChatBotMsgRouter.Handle
 	go tgBot.ListenAndServ()
 
 	router := gin.Default()
