@@ -18,5 +18,14 @@
     "relatedData_": {
       "WebUserID": "WebUser.Username"
     }
+  },
+  "TgCbFlowList": {
+    "fields": ["ID",  "Name",  "RowOrder", "AddedTimestamp"],
+    "headers": {
+      "AddedTimestamp": "Date"
+    },
+    "classes": {
+      "AddedTimestamp": "timestamp"
+    }
   }
 }
