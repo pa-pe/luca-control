@@ -15,6 +15,7 @@ import (
 
 type modelConfig struct {
 	PageTitle   string            `json:"pageTitle"`
+	DbTable     string            `json:"dbTable"`
 	Fields      []string          `json:"fields"`
 	Headers     map[string]string `json:"headers"`
 	Classes     map[string]string `json:"classes"`
@@ -34,6 +35,9 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 
 	if config.PageTitle == "" {
 		config.PageTitle = modelName
+	}
+	if config.DbTable == "" {
+		config.DbTable = utils.CamelToSnake(modelName)
 	}
 
 	htmlTable, err := RenderModelTable(db, modelName, config)
@@ -68,9 +72,10 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
-	tableName := utils.CamelToSnake(modelName)
+	//	tableName := utils.CamelToSnake(modelName)
+	//	tableName := utils.CamelToSnake(config.DbTable)
 	var records []map[string]interface{}
-	if err := db.Debug().Table(tableName).Find(&records).Error; err != nil {
+	if err := db.Debug().Table(config.DbTable).Find(&records).Error; err != nil {
 		return "", err
 	}
 
