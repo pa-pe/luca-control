@@ -1,0 +1,11 @@
+{
+    "pageTitle": "Telegram chatbot flow list",
+    "fields": ["ID",  "Name", "AddedTimestamp"],
+    "_fields_excluded": ["RowOrder"],
+    "headers": {
+      "AddedTimestamp": "Date"
+    },
+    "classes": {
+      "AddedTimestamp": "timestamp"
+    }
+}

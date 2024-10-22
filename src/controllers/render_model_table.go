@@ -13,7 +13,6 @@ import (
 	"strings"
 )
 
-// Структура для хранения конфигурации
 type modelConfig struct {
 	PageTitle   string            `json:"pageTitle"`
 	Fields      []string          `json:"fields"`
@@ -22,22 +21,14 @@ type modelConfig struct {
 	RelatedData map[string]string `json:"relatedData"`
 }
 
-// Конфигурация всех моделей
-var modelConfigs map[string]modelConfig
-
 func RenderModel(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
 	modelName := c.Param("modelName")
 
-	err := loadModelConfig("config/renderModelTable.json")
+	config, err := loadModelConfig("config/renderModelTable/" + modelName + ".json")
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error loading RenderModel configuration")
-	}
-
-	config, ok := modelConfigs[modelName]
-	if !ok {
-		log.Printf("configuration not found for model: %s", modelName)
-		c.String(http.StatusNotFound, "RenderModel "+modelName+" not found")
+		log.Print("No configuration found for RenderModel: " + modelName)
+		c.String(http.StatusNotFound, "No configuration found for RenderModel: "+modelName)
 		return
 	}
 
@@ -45,7 +36,7 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 		config.PageTitle = modelName
 	}
 
-	htmlTable, err := RenderModelTable(db, modelName)
+	htmlTable, err := RenderModelTable(db, modelName, config)
 	if err != nil {
 		fmt.Println("Ошибка:", err)
 		c.String(http.StatusNotFound, "RenderModel "+modelName+" not found")
@@ -59,21 +50,21 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 	})
 }
 
-func loadModelConfig(configPath string) error {
+func loadModelConfig(configPath string) (*modelConfig, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	if err := json.Unmarshal(data, &modelConfigs); err != nil {
-		return fmt.Errorf("failed to parse config JSON: %w", err)
+	var config modelConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
 	}
-	return nil
+	return &config, nil
 }
 
-func RenderModelTable(db *gorm.DB, modelName string) (string, error) {
-	config, ok := modelConfigs[modelName]
-	if !ok {
+func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (string, error) {
+	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
@@ -98,7 +89,6 @@ func RenderModelTable(db *gorm.DB, modelName string) (string, error) {
 	}
 	htmlTable.WriteString("</tr></thead>\n<tbody>")
 
-	// Кэш для хранения полученных значений связанных данных
 	relatedDataCache := make(map[string]string)
 
 	for _, record := range records {
