@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS tg_users (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     language_code CHAR(2) NOT NULL,
+    is_bot numeric default false not null,
     chatbot_permit TINYINT NOT NULL DEFAULT 0,
     chatbot_state VARCHAR(100) NOT NULL,
     shift_state TINYINT NOT NULL DEFAULT 0,

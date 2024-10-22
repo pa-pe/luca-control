@@ -68,6 +68,11 @@ func main() {
 		log.Fatalf("Error getting SQL DB: %v", err)
 	}
 
+	//err = dbConn.AutoMigrate(&model.TgUser{})
+	//if err != nil {
+	//	log.Fatalf("Error auto-migrating database: %v", err)
+	//}
+
 	storage.RunMigrations(db)
 
 	tgBot := src.NewTelegramBot(tgBotToken)

@@ -105,6 +105,7 @@ func (c *TelegramController) ListenForMessages() error {
 				FirstName:    update.Message.From.FirstName,
 				LastName:     update.Message.From.LastName,
 				LanguageCode: update.Message.From.LanguageCode,
+				IsBot:        update.Message.From.IsBot,
 			}
 
 			msg := model.TgMsg{
@@ -165,10 +166,9 @@ func (c *TelegramController) ListenForMessages() error {
 	return nil
 }
 
-func (c *TelegramController) SendMessage(chatID int64, text string, keyboardStr string) error {
+func (c *TelegramController) SendMessage(chatID int64, text string, keyboardStr string) {
 	response := tgbotapi.NewMessage(chatID, text)
 
-	// Настройка клавиатуры
 	if keyboardStr == "remove" {
 		removeKeyboard := tgbotapi.NewRemoveKeyboard(true) // true означает, что клавиатура будет удалена для всех пользователей
 		response.ReplyMarkup = removeKeyboard
@@ -177,9 +177,10 @@ func (c *TelegramController) SendMessage(chatID int64, text string, keyboardStr 
 		response.ReplyMarkup = keyboard
 	}
 
-	// Отправка сообщения
 	_, err := c.botAPI.Send(response)
-	return err
+	if err != nil {
+		log.Fatalf("Failed to send message: %v", err)
+	}
 }
 
 func loadKeyboardFromTxt(input string) tgbotapi.ReplyKeyboardMarkup {

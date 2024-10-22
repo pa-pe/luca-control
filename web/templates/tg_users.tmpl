@@ -145,6 +145,7 @@ function updateField(event, model, ID, field, value, displayValue, element) {
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>&nbsp;</th>
+                    <th>IsBot</th>
                     <th>Chatbot</th>
                     <th>Chatbot State</th>
                     <th>Shift State</th>
@@ -160,6 +161,12 @@ function updateField(event, model, ID, field, value, displayValue, element) {
                     <td>{{.LastName}}</td>
                     <td>{{.LanguageCode}}</td>
                     <td>
+{{ if .IsBot }}
+Bot
+{{ end }}
+</td>
+                    <td>
+{{ if eq .IsBot false }}
         <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ .ID }}" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ if eq .ChatbotPermit 0 }}No{{ else }}Permit{{ end }}
@@ -170,6 +177,7 @@ function updateField(event, model, ID, field, value, displayValue, element) {
                 <!-- li><a class="dropdown-item" href="#" onclick="setChatbotPermitValue({{ .ID }}, 0, this)">No</a></li -->
             </ul>
         </div>
+{{ end }}
 
                     </td>
                     <td>{{.ChatbotState}}</td>
