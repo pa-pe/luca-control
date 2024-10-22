@@ -1,5 +1,6 @@
 {
   "DbChanges": {
+    "pageTitle": "Database changes",
     "fields": ["ID", "WebUserID", "ModelName", "DataFrom", "DataTo", "AddedTimestamp"],
     "headers": {
       "web_user_id": "User",
@@ -20,7 +21,9 @@
     }
   },
   "TgCbFlowList": {
-    "fields": ["ID",  "Name",  "RowOrder", "AddedTimestamp"],
+    "pageTitle": "Telegram chatbot flow list",
+    "fields": ["ID",  "Name", "AddedTimestamp"],
+    "_fields_excluded": ["RowOrder"],
     "headers": {
       "AddedTimestamp": "Date"
     },

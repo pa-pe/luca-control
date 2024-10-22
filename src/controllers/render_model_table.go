@@ -7,6 +7,7 @@ import (
 	"github.com/pa-pe/luca-control/src/utils"
 	"gorm.io/gorm"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 // Структура для хранения конфигурации
 type modelConfig struct {
+	PageTitle   string            `json:"pageTitle"`
 	Fields      []string          `json:"fields"`
 	Headers     map[string]string `json:"headers"`
 	Classes     map[string]string `json:"classes"`
@@ -32,6 +34,17 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 		c.String(http.StatusInternalServerError, "Error loading RenderModel configuration")
 	}
 
+	config, ok := modelConfigs[modelName]
+	if !ok {
+		log.Printf("configuration not found for model: %s", modelName)
+		c.String(http.StatusNotFound, "RenderModel "+modelName+" not found")
+		return
+	}
+
+	if config.PageTitle == "" {
+		config.PageTitle = modelName
+	}
+
 	htmlTable, err := RenderModelTable(db, modelName)
 	if err != nil {
 		fmt.Println("Ошибка:", err)
@@ -40,13 +53,12 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 	}
 
 	c.HTML(http.StatusOK, "render_model_table.tmpl", gin.H{
-		"Title":       "RenderModel",
+		"Title":       config.PageTitle,
 		"CurrentUser": currentAuthUser.Username,
 		"Content":     template.HTML(htmlTable),
 	})
 }
 
-// Функция для загрузки конфигурации из JSON
 func loadModelConfig(configPath string) error {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -62,7 +74,7 @@ func loadModelConfig(configPath string) error {
 func RenderModelTable(db *gorm.DB, modelName string) (string, error) {
 	config, ok := modelConfigs[modelName]
 	if !ok {
-		return "", fmt.Errorf("configuration not found for model: %s", modelName)
+		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
 	tableName := utils.CamelToSnake(modelName)
