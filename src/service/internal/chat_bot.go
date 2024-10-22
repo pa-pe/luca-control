@@ -5,6 +5,7 @@ import (
 	"github.com/pa-pe/luca-control/src/storage"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
+	"math/rand"
 	"strings"
 	"unicode"
 )
@@ -26,7 +27,7 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 
 	// check once for existence chatBotUser in db
 	if c.chatBotUserInserted == false {
-		err = c.telegramStorage.CreateUserIfNotExist(&botTgUser)
+		_, err = c.telegramStorage.CreateUserIfNotExist(&botTgUser)
 		if err != nil {
 			log.Print("ChatBot Handle problem with db insert chatBotTgUser")
 			return "", "", nil
@@ -34,10 +35,13 @@ func (c *ChatBotImpl) Handle(botTgUser model.TgUser, tgUser model.TgUser, tgMsg 
 		c.chatBotUserInserted = true
 	}
 
-	err = c.telegramStorage.CreateUserIfNotExist(&tgUser)
+	isUserCreated, err := c.telegramStorage.CreateUserIfNotExist(&tgUser)
 	if err != nil {
 		log.Print("ChatBot Handle problem with db insert tgUser")
 		return "", "", nil
+	}
+	if isUserCreated {
+		c.onNewTgUser(&tgUser)
 	}
 
 	//	answerMsg := c.echo(tgMsg.Text)
@@ -106,12 +110,23 @@ func (c *ChatBotImpl) msgRouter(tgMsg *model.TgMsg) (string, string) {
 		return "removed", "remove"
 	} else if msg == "Hide KB" {
 		return "...", ""
+	} else if msg == "users" {
+		answer := ""
+		//tgUsers, _ := c.telegramStorage.FindUsersByCustomQuery("")
+		//for _, record := range *tgUsers {
+		//	answer = answer + record.UserName + "\n"
+		//}
+		return answer, ""
 	} else if msg == "msg" {
 		c.tgBot.TgController.SendMessage(tgMsg.ChatID, ";)", "")
 		return "done", ""
 	}
 
-	return "0_o", ""
+	answers := make([]string, 0)
+	answers = append(answers, "0_o", "o_0", "o_o", "0_0")
+
+	//return "0_o", ""
+	return answers[rand.Intn(len(answers))], ""
 }
 
 func (c *ChatBotImpl) echo(msg string) string {
@@ -121,6 +136,14 @@ func (c *ChatBotImpl) echo(msg string) string {
 func HandleCmdStart() string {
 	answer := "Hello! Please wait for permission to continue."
 	return answer
+}
+
+func (c *ChatBotImpl) onNewTgUser(newTgUser *model.TgUser) {
+	foundTgUsers, _ := c.telegramStorage.FindUsersByCustomQuery("id = 568876500")
+	for _, foundTgUser := range *foundTgUsers {
+		msg := "New user connected to telegram bot, UserName=" + newTgUser.UserName + ", FirstName=" + newTgUser.FirstName
+		c.tgBot.TgController.SendMessage(foundTgUser.ID, msg, "")
+	}
 }
 
 func NewChatBotService(telegramStorage storage.ITelegram, tgBot *src.BotImpl) *ChatBotImpl {
