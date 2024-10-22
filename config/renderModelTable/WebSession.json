@@ -1,0 +1,8 @@
+{
+  "pageTitle": "Web sessions",
+  "dbTable": "web_sessions",
+  "fields": ["ID", "WebUserID",  "CreatedAt", "ExpiresAt"],
+  "relatedData": {
+    "WebUserID": "web_users.username"
+  }
+}

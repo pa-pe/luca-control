@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Locations list",
+  "fields": ["ID",  "Name", "Price", "AddedTimestamp"],
+  "headers": {
+    "AddedTimestamp": "Date"
+  },
+  "classes": {
+    "AddedTimestamp": "timestamp"
+  }
+}

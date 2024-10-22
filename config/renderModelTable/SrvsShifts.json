@@ -1,0 +1,7 @@
+{
+  "pageTitle": "Locations list",
+  "fields": ["ID", "SrvsLocationId", "Date", "SrvsEmployeesId", "Salary", "Paid", "LeftToPay", "Tips", "QuantityPostCards", "QuantityPrints", "QuantityFeedbacks"],
+  "classes": {
+    "Date": "timestamp"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Employees list",
+  "fields": ["ID",  "Name", "Percentage", "AddedTimestamp"],
+  "headers": {
+    "AddedTimestamp": "Date"
+  },
+  "classes": {
+    "AddedTimestamp": "timestamp"
+  }
+}
