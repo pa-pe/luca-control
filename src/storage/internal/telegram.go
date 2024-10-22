@@ -16,7 +16,7 @@ func (c *TelegramImpl) FindUserById(userID int64) (*model.TgUser, error) {
 	//func (c *telegramImpl) FindUserById(ctx context.Context, userID int64) (*model.TgUser, error) {
 	//	db := c.DB.WithContext(ctx)
 	db := c.DB
-	m := &model.TgUser{}
+	//	m := &model.TgUser{}
 	//	db.Raw("Select 'Hello world' as title").Scan(m)
 
 	var existingUser model.TgUser
@@ -32,14 +32,32 @@ func (c *TelegramImpl) FindUserById(userID int64) (*model.TgUser, error) {
 	}
 	//fmt.Printf("UserID=%d found, UserName=%s\n", userID, existingUser.UserName)
 
-	return m, nil
+	return &existingUser, nil
 }
 
-func (c *TelegramImpl) CreateUserIfNotExist(tgUser *model.TgUser) error {
+func (c *TelegramImpl) FindUsersByCustomQuery(where string) (*[]model.TgUser, error) {
+	db := c.DB
+	//	m := &model.TgUser{}
+
+	var existingUsers *[]model.TgUser
+	if err := db.Where(where).Find(&existingUsers).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			//		fmt.Printf("UserID=%d not found\n", userID)
+			return nil, nil
+		} else {
+			log.Printf("User search error: %v", err)
+			return nil, err
+		}
+	}
+
+	return existingUsers, nil
+}
+
+func (c *TelegramImpl) CreateUserIfNotExist(tgUser *model.TgUser) (bool, error) {
 	// check if record exists before adding
 	existingTgUser, err := c.FindUserById(tgUser.ID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	db := c.DB
@@ -47,11 +65,12 @@ func (c *TelegramImpl) CreateUserIfNotExist(tgUser *model.TgUser) error {
 	if existingTgUser == nil {
 		if err := db.Create(&tgUser).Error; err != nil {
 			log.Printf("Error creating user: %v", err)
-			return err
+			return false, err
 		}
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 // InsertMsg returns inserted ID and error

@@ -11,9 +11,9 @@ type Storages struct {
 }
 
 type ITelegram interface {
-	//	FindFindUserById(ctx context.Context, userID int64) (*model.TgUser, error)
 	FindUserById(userID int64) (*model.TgUser, error)
-	CreateUserIfNotExist(tgUser *model.TgUser) error
+	FindUsersByCustomQuery(where string) (*[]model.TgUser, error)
+	CreateUserIfNotExist(tgUser *model.TgUser) (bool, error)
 	InsertMsg(tgMsg *model.TgMsg) (int64, error)
 	UpdateTgOutMsgIdAfterSend(tgMsg *model.TgMsg) error
 }
