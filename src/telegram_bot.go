@@ -95,6 +95,7 @@ func (c *TelegramController) ListenForMessages() error {
 		UserName:  c.BotInfo.UserName,
 		FirstName: c.BotInfo.FirstName,
 		LastName:  c.BotInfo.LastName,
+		IsBot:     c.BotInfo.IsBot,
 	}
 
 	for update := range updates {
