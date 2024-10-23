@@ -1,0 +1,12 @@
+{
+  "dbTable": "tg_cb_flow_steps",
+  "sqlWhere": "tg_cb_flow_id = $TgCbFlowId$",
+  "pageTitle": "Telegram chatbot flow list",
+  "fields": ["ID", "TgCbFlowId", "Msg", "HandlerName", "RowOrder", "AddedTimestamp"],
+  "headers": {
+    "AddedTimestamp": "Date"
+  },
+  "classes": {
+    "AddedTimestamp": "timestamp"
+  }
+}
