@@ -27,6 +27,8 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	//	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.html")))
 	router.SetHTMLTemplate(template.Must(template.ParseGlob("web/templates/*.*")))
 
+	router.Static("/static", "./web/static")
+
 	//router.GET("/login", controllers.ShowLoginPage)
 	router.GET("/login", func(c *gin.Context) { controllers.ShowLoginPage(c, db) })
 	router.POST("/login", func(c *gin.Context) { controllers.HandleLogin(c, db) })
