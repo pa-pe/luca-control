@@ -6,5 +6,7 @@
   },
   "classes": {
     "AddedTimestamp": "timestamp"
-  }
+  },
+  "addableFields": ["Name", "Percentage"],
+  "requiredFields": ["Name"]
 }
