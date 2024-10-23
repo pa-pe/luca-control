@@ -62,7 +62,7 @@ CREATE TABLE tg_cb_flow_list (
                                  added_timestamp BIGINT NOT NULL DEFAULT (strftime('%s', 'now'))
 );
 
-CREATE TABLE tg_cb_flow (
+CREATE TABLE tg_cb_flow_steps (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             tg_cb_flow_id INTEGER NOT NULL DEFAULT 0,
                             msg TEXT NOT NULL,
