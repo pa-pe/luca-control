@@ -56,13 +56,10 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	addForm := RenderAddForm(config, modelName)
-
 	c.HTML(http.StatusOK, "render_model_table.tmpl", gin.H{
 		"Title":       config.PageTitle,
 		"CurrentUser": currentAuthUser.Username,
 		"Content":     template.HTML(htmlTable),
-		"AddForm":     template.HTML(addForm),
 	})
 }
 
@@ -120,8 +117,11 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 	}
 
 	var htmlTable strings.Builder
+	htmlTable.WriteString(`<h2>` + config.PageTitle + `</h2>` + "\n")
 	htmlTable.WriteString(breadcrumbBuilder(config))
-	htmlTable.WriteString("<table class='table'>\n<thead><tr>")
+	htmlTable.WriteString(RenderAddForm(config, modelName))
+
+	htmlTable.WriteString("<table class='table mt-3'>\n<thead><tr>")
 
 	for _, field := range config.Fields {
 		header := config.Headers[field]
