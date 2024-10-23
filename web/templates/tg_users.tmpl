@@ -147,7 +147,7 @@ function updateField(event, model, ID, field, value, displayValue, element) {
                     <th>&nbsp;</th>
                     <th>IsBot</th>
                     <th>Chatbot</th>
-                    <th>Chatbot State</th>
+                    <th>Chatbot Flow State</th>
                     <th>Shift State</th>
                     <th>Added</th>
                 </tr>
@@ -180,7 +180,7 @@ Bot
 {{ end }}
 
                     </td>
-                    <td>{{.ChatbotState}}</td>
+                    <td>{{.TgCbFlowStepId}}</td>
                     <td>{{.ShiftState}}</td>
                     <td class="timestamp">{{.AddedTimestamp}}</td>
                 </tr>
