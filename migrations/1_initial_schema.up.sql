@@ -66,7 +66,8 @@ CREATE TABLE tg_cb_flow_steps (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             tg_cb_flow_id INTEGER NOT NULL DEFAULT 0,
                             msg TEXT NOT NULL,
-                            handler_mame VARCHAR(255) NOT NULL,
+                            keyboard VARCHAR(255) NOT NULL,
+                            handler_name VARCHAR(255) NOT NULL,
                             row_order INTEGER NOT NULL DEFAULT 0,
                             added_timestamp BIGINT NOT NULL DEFAULT (strftime('%s', 'now'))
 );
