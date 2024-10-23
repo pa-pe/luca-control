@@ -14,22 +14,34 @@ import (
 )
 
 type modelConfig struct {
-	PageTitle         string            `json:"pageTitle"`
-	DbTable           string            `json:"dbTable"`
-	Fields            []string          `json:"fields"`
-	Headers           map[string]string `json:"headers"`
-	Classes           map[string]string `json:"classes"`
-	RelatedData       map[string]string `json:"relatedData"`
-	AddableFields     []string          `json:"addableFields"`
-	RequiredFields    []string          `json:"requiredFields"`
-	NoZeroValueFields []string          `json:"noZeroValueFields"`
+	PageTitle         string                            `json:"pageTitle"`
+	DbTable           string                            `json:"dbTable"`
+	SqlWhere          string                            `json:"sqlWhere"`
+	Fields            []string                          `json:"fields"`
+	Headers           map[string]string                 `json:"headers"`
+	Classes           map[string]string                 `json:"classes"`
+	RelatedData       map[string]string                 `json:"relatedData"`
+	AddableFields     []string                          `json:"addableFields"`
+	RequiredFields    []string                          `json:"requiredFields"`
+	NoZeroValueFields []string                          `json:"noZeroValueFields"`
+	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
+	Links             map[string]LinkConfig             `json:"links"`
+}
+
+type CountRelatedDataConfig struct {
+	Table      string `json:"table"`
+	ForeignKey string `json:"foreignKey"`
+}
+
+type LinkConfig struct {
+	Template string `json:"template"` // Шаблон URL, например "/render_table/TgCbFlowStep?TgCbFlowId=ID"
 }
 
 func RenderModel(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
 	modelName := c.Param("modelName")
 
-	config, err := loadModelConfig(modelName)
+	config, err := loadModelConfig(c, modelName)
 	if err != nil {
 		log.Print("No configuration found for RenderModel: " + modelName)
 		c.String(http.StatusNotFound, "No configuration found for RenderModel: "+modelName)
@@ -54,7 +66,7 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 	})
 }
 
-func loadModelConfig(modelName string) (*modelConfig, error) {
+func loadModelConfig(c *gin.Context, modelName string) (*modelConfig, error) {
 	configPath := "config/renderModelTable/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)
@@ -72,6 +84,15 @@ func loadModelConfig(modelName string) (*modelConfig, error) {
 	}
 	if config.DbTable == "" {
 		config.DbTable = utils.CamelToSnake(modelName)
+	}
+
+	queryParams := c.Request.URL.Query()
+	for key, values := range queryParams {
+		for _, val := range values {
+			//		fmt.Printf("Parameter: %s, Value: %s\n", key, value)
+			placeholder := fmt.Sprintf("$%s$", key)
+			config.SqlWhere = strings.ReplaceAll(config.SqlWhere, placeholder, fmt.Sprintf("%v", val))
+		}
 	}
 
 	return &config, nil
@@ -93,10 +114,8 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 		log.Fatalf("configuration not found for model: %s", modelName)
 	}
 
-	//	tableName := utils.CamelToSnake(modelName)
-	//	tableName := utils.CamelToSnake(config.DbTable)
 	var records []map[string]interface{}
-	if err := db.Debug().Table(config.DbTable).Find(&records).Error; err != nil {
+	if err := db.Debug().Table(config.DbTable).Where(config.SqlWhere).Find(&records).Error; err != nil {
 		return "", err
 	}
 
@@ -157,6 +176,28 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 					}
 				}
 			}
+
+			if countConfig, countExists := config.CountRelatedData[field]; countExists {
+				foreignKeyValue, ok := record[countConfig.ForeignKey]
+				var count int64
+				if ok {
+					if err := db.Debug().Table(countConfig.Table).
+						Where(fmt.Sprintf("%s = ?", countConfig.ForeignKey), foreignKeyValue).
+						Count(&count).Error; err == nil {
+					}
+				}
+				value = count
+			}
+
+			if linkConfig, linkExists := config.Links[field]; linkExists {
+				link := linkConfig.Template
+				for key, val := range record {
+					placeholder := fmt.Sprintf("$%s$", key)
+					link = strings.ReplaceAll(link, placeholder, fmt.Sprintf("%v", val))
+				}
+				value = fmt.Sprintf("<a href='%s'>%v</a>", link, value)
+			}
+
 			htmlTable.WriteString(fmt.Sprintf("<td%s>%v</td>", classAttr, value))
 		}
 		htmlTable.WriteString("</tr>\n")
@@ -185,7 +226,7 @@ func HandleRenderTableAddRecord(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	config, err := loadModelConfig(modelName)
+	config, err := loadModelConfig(c, modelName)
 	if err != nil {
 		log.Printf("No configuration found for model: %s", modelName)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No configuration found for model '" + modelName + "'"})
