@@ -1,0 +1,1 @@
+ALTER TABLE tg_users ADD COLUMN srvs_employees_id INTEGER NOT NULL DEFAULT 0;
