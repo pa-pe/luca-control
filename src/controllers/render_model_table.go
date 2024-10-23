@@ -14,13 +14,15 @@ import (
 )
 
 type modelConfig struct {
-	PageTitle     string            `json:"pageTitle"`
-	DbTable       string            `json:"dbTable"`
-	Fields        []string          `json:"fields"`
-	Headers       map[string]string `json:"headers"`
-	Classes       map[string]string `json:"classes"`
-	RelatedData   map[string]string `json:"relatedData"`
-	AddableFields []string          `json:"addableFields"`
+	PageTitle         string            `json:"pageTitle"`
+	DbTable           string            `json:"dbTable"`
+	Fields            []string          `json:"fields"`
+	Headers           map[string]string `json:"headers"`
+	Classes           map[string]string `json:"classes"`
+	RelatedData       map[string]string `json:"relatedData"`
+	AddableFields     []string          `json:"addableFields"`
+	RequiredFields    []string          `json:"requiredFields"`
+	NoZeroValueFields []string          `json:"noZeroValueFields"`
 }
 
 func RenderModel(c *gin.Context, db *gorm.DB) {
@@ -180,15 +182,30 @@ func HandleRenderTableAddRecord(c *gin.Context, db *gorm.DB) {
 
 	insertData := make(map[string]interface{})
 	for _, field := range config.AddableFields {
-		//if value := c.PostForm(field); value != "" {
-		//	data[utils.CamelToSnake(field)] = value
-		//}
 		if value, exists := payload[field]; exists {
 			insertData[utils.CamelToSnake(field)] = value
 		}
 	}
 
-	fmt.Println(insertData)
+	//	fmt.Println(insertData)
+
+	// check RequiredFields
+	for _, requiredField := range config.RequiredFields {
+		if value, exists := payload[requiredField]; !exists || value == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' is required", requiredField)})
+			return
+		}
+	}
+
+	// check NoZeroValueFields
+	for _, noZeroField := range config.NoZeroValueFields {
+		if value, exists := payload[noZeroField]; exists {
+			if number, ok := value.(float64); ok && number == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Field '%s' cannot be zero", noZeroField)})
+				return
+			}
+		}
+	}
 
 	if len(insertData) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No data to insert"})
@@ -210,6 +227,7 @@ func RenderAddForm(config *modelConfig, modelName string) string {
 
 	var formBuilder strings.Builder
 	formBuilder.WriteString(`<script src="/static/js/render_table_add.js"></script>
+<link rel="stylesheet" href="/static/css/render_table_add.css">
 	<div class="accordion" id="addFormAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="addFormHeading">
@@ -231,10 +249,21 @@ func RenderAddForm(config *modelConfig, modelName string) string {
 			label = field
 		}
 
+		requiredAttr := ""
+		requiredLabel := ""
+		for _, requiredField := range config.RequiredFields {
+			if requiredField == field {
+				requiredAttr = "required"
+				requiredLabel = ` <span class="required-label">(required)</span>`
+				break
+			}
+		}
+
 		formBuilder.WriteString(fmt.Sprintf(`<div class="mb-3">
-            <label for="%s" class="form-label">%s</label>
-            <input type="text" class="form-control" id="%s" name="%s">
-        </div>`, field, label, field, field))
+        <label for="%s" class="form-label">%s%s</label>
+        <input type="text" class="form-control" id="%s" name="%s" %s>
+    </div>`, field, label, requiredLabel, field, field, requiredAttr))
+
 	}
 
 	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Add</button></form>`)
