@@ -6,3 +6,7 @@ type SrvsEmployeesList struct {
 	Percentage     float32 `gorm:"not null" json:"percentage"`
 	AddedTimestamp int64   `gorm:"autoCreateTime" json:"added_timestamp"`
 }
+
+func (SrvsEmployeesList) TableName() string {
+	return "srvs_employees_list"
+}
