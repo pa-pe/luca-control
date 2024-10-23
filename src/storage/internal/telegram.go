@@ -93,8 +93,8 @@ func (c *TelegramImpl) UpdateTgOutMsgIdAfterSend(tgMsgOut *model.TgMsg) error {
 	return nil
 }
 
-func (c *TelegramImpl) GetCbFlow(tgCbFlowId int) (*[]model.TgCbFlow, error) {
-	var tgCbFlow *[]model.TgCbFlow
+func (c *TelegramImpl) GetCbFlow(tgCbFlowId int) (*[]model.TgCbFlowStep, error) {
+	var tgCbFlow *[]model.TgCbFlowStep
 	if err := c.DB.Where("tgCbFlowId = ?", tgCbFlowId).Find(&tgCbFlow).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			//		fmt.Printf("UserID=%d not found\n", userID)
