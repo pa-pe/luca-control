@@ -133,7 +133,9 @@ $(document).ready(function(){
         var tgUserId = $(this).closest("select").attr("tgUserId");
         var srvsEmployeesId = this.value;
 //        alert( tgUserId + ":" + srvsEmployeesId );
-        send_update_data({ "model": 'TgUser', "id": tgUserId, ["SrvsEmployeesId"]: srvsEmployeesId });
+        if (confirm("Set " + $(this).find("option:selected").text() + "?")){
+            send_update_data({ "model": 'TgUser', "id": tgUserId, ["SrvsEmployeesId"]: srvsEmployeesId });
+        }
     });
 
     $('select.SrvsEmployees').each(function() {
