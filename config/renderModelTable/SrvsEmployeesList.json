@@ -8,5 +8,5 @@
     "AddedTimestamp": "timestamp"
   },
   "addableFields": ["Name", "Percentage"],
-  "requiredFields": ["Name"]
+  "requiredFields": ["Name", "Percentage"]
 }
