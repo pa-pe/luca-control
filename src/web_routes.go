@@ -48,6 +48,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 
 		authorized.POST("/update_model", func(c *gin.Context) { controllers.UpdateModel(c, db) })
 		authorized.GET("/render_table/:modelName", func(c *gin.Context) { controllers.RenderModel(c, db) })
+		authorized.POST("/render_table/add/", func(c *gin.Context) { controllers.HandleRenderTableAddRecord(c, db) })
 	}
 
 	// Show initial setup page if it's the first run
