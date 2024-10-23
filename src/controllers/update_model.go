@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // UpdateModel updates the fields of a specified model based on the allowedFields
@@ -19,8 +20,8 @@ func UpdateModel(c *gin.Context, db *gorm.DB) {
 
 	// Configuration for allowed fields
 	var allowedFields = map[string][]string{
-		"TgUser": {"chatbot_permit", "first_name", "last_name", "language_code", "shift_state"},
-		"TgMsg":  {"text", "is_outgoing", "reply_to_message_id"},
+		"TgUser": {"chatbot_permit", "SrvsEmployeesId"},
+		//"TgMsg":  {"text", "is_outgoing", "reply_to_message_id"},
 	}
 
 	var payload map[string]interface{}
@@ -35,10 +36,22 @@ func UpdateModel(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+	fmt.Println(payload)
+
 	id, ok := payload["id"].(float64)
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
-		return
+		idStr, ok := payload["id"].(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+			return
+		}
+
+		idFromStr, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID recognize"})
+			return
+		}
+		id = float64(idFromStr)
 	}
 
 	// Retrieve allowed fields for the specified model

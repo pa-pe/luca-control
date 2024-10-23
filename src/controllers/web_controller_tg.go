@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 )
 
@@ -12,14 +13,23 @@ func ListTgUsers(c *gin.Context, db *gorm.DB) {
 
 	var tgUsers []model.TgUser
 	if err := db.Find(&tgUsers).Error; err != nil {
+		log.Printf("Error retrieving Telegram users: %v", err)
 		c.String(http.StatusInternalServerError, "Error retrieving Telegram users")
 		return
 	}
 
+	var srvsEmployeesList []model.SrvsEmployeesList
+	if err := db.Find(&srvsEmployeesList).Error; err != nil {
+		log.Printf("Error retrieving Employees users: %v", err)
+		c.String(http.StatusInternalServerError, "Error retrieving Employees users")
+		return
+	}
+
 	c.HTML(http.StatusOK, "tg_users.tmpl", gin.H{
-		"Title":       "Telegram Users",
-		"CurrentUser": currentAuthUser.Username,
-		"tgUsers":     tgUsers,
+		"Title":             "Telegram Users",
+		"CurrentUser":       currentAuthUser.Username,
+		"tgUsers":           tgUsers,
+		"srvsEmployeesList": srvsEmployeesList,
 	})
 }
 

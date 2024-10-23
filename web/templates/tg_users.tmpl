@@ -2,6 +2,7 @@
 {{ template "js_timestamp_converter" . }}
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/static/tbl_update_fld.js"></script>
 <script>
 function updateField(event, model, ID, field, value, displayValue, element) {
     const anim_time = 500; //ms
@@ -126,6 +127,20 @@ function updateField(event, model, ID, field, value, displayValue, element) {
     });
 
 }
+
+$(document).ready(function(){
+    $('select.SrvsEmployees').on('change', function() {
+        var tgUserId = $(this).closest("select").attr("tgUserId");
+        var srvsEmployeesId = this.value;
+//        alert( tgUserId + ":" + srvsEmployeesId );
+        send_update_data({ "model": 'TgUser', "id": tgUserId, ["SrvsEmployeesId"]: srvsEmployeesId });
+    });
+
+    $('select.SrvsEmployees').each(function() {
+        var srvsEmployeesId = $(this).attr('SrvsEmployeesId');
+        $(this).val(srvsEmployeesId);
+    }).show();
+});
 </script>
 
 
@@ -168,6 +183,8 @@ Bot
 </td>
                     <td>
 {{ if eq .IsBot false }}
+{{ if .SrvsEmployeesId }}
+
         <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton-{{ .ID }}" data-bs-toggle="dropdown" aria-expanded="false">
                 {{ if eq .ChatbotPermit 0 }}No{{ else }}Permit{{ end }}
@@ -178,15 +195,29 @@ Bot
                 <!-- li><a class="dropdown-item" href="#" onclick="setChatbotPermitValue({{ .ID }}, 0, this)">No</a></li -->
             </ul>
         </div>
+{{ else }}
+  {{ if eq .ChatbotPermit 0 }}No <b>***</b>{{ else }}Permit{{ end }}
+{{ end }}
 {{ end }}
 
                     </td>
                     <td>{{.TgCbFlowStepId}}</td>
-                    <td>{{.SrvsEmployeesId}}</td>
+                    <td>
+
+<select name="SrvsEmployees" class="SrvsEmployees" tgUserId="{{.ID}}" SrvsEmployeesId="{{.SrvsEmployeesId}}" style="display: none;">
+  <option value="0">none</option>
+{{ range $.srvsEmployeesList }}
+  <option value="{{ .ID }}">{{.Name}}</option>
+{{ end }}
+</select>
+
+                    </td>
                     <td>{{.ShiftState}}</td>
                     <td class="timestamp">{{.AddedTimestamp}}</td>
                 </tr>
                 {{end}}
             </tbody>
         </table>
+<p><b>***</b> - Set Employee before permit chatbot for telegram user.</p>
+
 {{ template "footer" . }}
