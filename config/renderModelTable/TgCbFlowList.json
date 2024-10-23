@@ -1,11 +1,22 @@
 {
-    "pageTitle": "Telegram chatbot flow list",
-    "fields": ["ID",  "Name", "AddedTimestamp"],
-    "_fields_excluded": ["RowOrder"],
-    "headers": {
-      "AddedTimestamp": "Date"
-    },
-    "classes": {
-      "AddedTimestamp": "timestamp"
+  "pageTitle": "Telegram chatbot flow list",
+  "fields": ["ID", "Name", "StepsCount", "AddedTimestamp"],
+  "_fields_excluded": ["RowOrder"],
+  "headers": {
+   "AddedTimestamp": "Date"
+  },
+  "classes": {
+    "AddedTimestamp": "timestamp"
+  },
+  "countRelatedData": {
+    "StepsCount": {
+      "table": "tg_cb_flow_steps",
+      "foreignKey": "tg_cb_flow_id"
     }
+  },
+  "links": {
+    "StepsCount": {
+      "template": "/render_table/TgCbFlowStep?TgCbFlowId=$id$"
+    }
+  }
 }
