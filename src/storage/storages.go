@@ -16,6 +16,7 @@ type ITelegram interface {
 	CreateUserIfNotExist(tgUser *model.TgUser) (bool, error)
 	InsertMsg(tgMsg *model.TgMsg) (int64, error)
 	UpdateTgOutMsgIdAfterSend(tgMsg *model.TgMsg) error
+	GetCbFlow(tgCbFlowId int) (*[]model.TgCbFlow, error)
 }
 
 func NewStorages(db *gorm.DB) *Storages {
