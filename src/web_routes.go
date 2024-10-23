@@ -3,20 +3,18 @@ package src
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pa-pe/luca-control/src/controllers"
-	"github.com/pa-pe/luca-control/src/storage/model"
 	"gorm.io/gorm"
 	"html/template"
 	"log"
 )
 
 func SetupRoutes(router *gin.Engine, db *gorm.DB) {
-	// Check if there are any web users in the database
-	var userCount int64
-	if err := db.Model(&model.WebUser{}).Count(&userCount).Error; err != nil {
-		log.Fatalf("Failed to check web users count: %v", err)
+	// FirstRun
+	controllers.CheckFirstRun(db)
+	if controllers.IsFirstRun == true {
+		controllers.LoadInitialSQLIfNeeded(db, "config/initial_dev_test.sql")
+		controllers.CheckFirstRun(db)
 	}
-	// If no users exist, it's the first run
-	controllers.IsFirstRun = userCount == 0
 
 	// Configure router settings
 	err := router.SetTrustedProxies(nil)

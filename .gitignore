@@ -25,3 +25,4 @@
 logs
 tmp
 *.db
+/config/initial_dev_test.sql
