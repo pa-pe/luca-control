@@ -204,12 +204,18 @@ Bot
                     <td>{{.TgCbFlowStepId}}</td>
                     <td>
 
+{{ if .IsBot }}
+Bot
+{{ else }}
+
 <select name="SrvsEmployees" class="SrvsEmployees" tgUserId="{{.ID}}" SrvsEmployeesId="{{.SrvsEmployeesId}}" style="display: none;">
   <option value="0">none</option>
 {{ range $.srvsEmployeesList }}
   <option value="{{ .ID }}">{{.Name}}</option>
 {{ end }}
 </select>
+
+{{ end }}
 
                     </td>
                     <td>{{.ShiftState}}</td>
