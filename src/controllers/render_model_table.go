@@ -77,6 +77,17 @@ func loadModelConfig(modelName string) (*modelConfig, error) {
 	return &config, nil
 }
 
+func breadcrumbBuilder(config *modelConfig) string {
+	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">` + "\n"
+	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
+	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/">Home</a></li>` + "\n"
+	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page">` + config.PageTitle + `</li>` + "\n"
+	breadcrumbStr += `  </ol>` + "\n"
+	breadcrumbStr += `</nav>` + "\n"
+
+	return breadcrumbStr
+}
+
 func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (string, error) {
 	if config == nil || modelName == "" {
 		log.Fatalf("configuration not found for model: %s", modelName)
@@ -90,6 +101,7 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 	}
 
 	var htmlTable strings.Builder
+	htmlTable.WriteString(breadcrumbBuilder(config))
 	htmlTable.WriteString("<table class='table'>\n<thead><tr>")
 
 	for _, field := range config.Fields {
