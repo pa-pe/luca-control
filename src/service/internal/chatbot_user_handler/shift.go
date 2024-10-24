@@ -60,6 +60,23 @@ func handleUserChooseLocation(telegramStorage storage.ITelegram, tgUser *model.T
 		return "Please tap locations button from menu", "func:getLocationsKeyboard"
 	}
 
+	// Start shift
+	srvsShift := model.SrvsShifts{
+		SrvsLocationId:  srvsLocationList[0].ID,
+		SrvsEmployeesId: tgUser.SrvsEmployeesId,
+	}
+	_, err = telegramStorage.InsertSrvsShift(&srvsShift)
+	if err != nil {
+		log.Printf("chatbot_user_handler: InsertSrvsShift failed: %v", err)
+		return cbServerErr, ""
+	}
+
+	err = telegramStorage.UpdateEmployeeSrvsShiftId(tgUser.SrvsEmployeesId, srvsShift.ID)
+	if err != nil {
+		log.Printf("chatbot_user_handler: UpdateSrvsShift failed: %v", err)
+		return cbServerErr, ""
+	}
+
 	// return empty if handler pass userdata
 	return "", ""
 }
