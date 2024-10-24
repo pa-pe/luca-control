@@ -26,6 +26,8 @@ type modelConfig struct {
 	NoZeroValueFields []string                          `json:"noZeroValueFields"`
 	CountRelatedData  map[string]CountRelatedDataConfig `json:"countRelatedData"`
 	Links             map[string]LinkConfig             `json:"links"`
+	Parent            map[string]string                 `json:"parent"`
+	ParentConfig      *modelConfig
 }
 
 type CountRelatedDataConfig struct {
@@ -34,7 +36,7 @@ type CountRelatedDataConfig struct {
 }
 
 type LinkConfig struct {
-	Template string `json:"template"` // Шаблон URL, например "/render_table/TgCbFlowStep?TgCbFlowId=ID"
+	Template string `json:"template"`
 }
 
 func RenderModel(c *gin.Context, db *gorm.DB) {
@@ -83,6 +85,14 @@ func loadModelConfig(c *gin.Context, modelName string) (*modelConfig, error) {
 		config.DbTable = utils.CamelToSnake(modelName)
 	}
 
+	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
+		//fmt.Println(parentModelName)
+		config.ParentConfig, err = loadModelConfig(c, parentModelName)
+		if err != nil {
+			log.Print("Can`t load ParentConfig: " + parentModelName)
+		}
+	}
+
 	queryParams := c.Request.URL.Query()
 	for key, values := range queryParams {
 		for _, val := range values {
@@ -99,6 +109,12 @@ func breadcrumbBuilder(config *modelConfig) string {
 	breadcrumbStr := `<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">` + "\n"
 	breadcrumbStr += `  <ol class="breadcrumb">` + "\n"
 	breadcrumbStr += `    <li class="breadcrumb-item"><a href="/">Home</a></li>` + "\n"
+
+	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
+		//fmt.Println(parentModelName)
+		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/render_table/` + parentModelName + `"">` + config.ParentConfig.PageTitle + `</a></li>` + "\n"
+	}
+
 	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page">` + config.PageTitle + `</li>` + "\n"
 	breadcrumbStr += `  </ol>` + "\n"
 	breadcrumbStr += `</nav>` + "\n"
