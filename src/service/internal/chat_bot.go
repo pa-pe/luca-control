@@ -209,6 +209,11 @@ func (c *ChatBotImpl) handleUserContinueFlow(tgUser *model.TgUser, msg string) (
 		return chatbot_user_handler.HandleServerError()
 	}
 
+	// check for flow termination
+	if boolTerminate, answerMsg, answerKeyboard := chatbot_user_handler.HandleFlowTermination(c.TelegramStorage, tgUser, msg, currentTgCbFlowStep.TgCbFlowId); boolTerminate == true {
+		return answerMsg, answerKeyboard
+	}
+
 	if currentTgCbFlowStep.HandlerName != "" {
 		msg, keyboard := chatbot_user_handler.Handle(c.TelegramStorage, currentTgCbFlowStep.HandlerName, tgUser, msg)
 		if msg != "" || keyboard != "" {

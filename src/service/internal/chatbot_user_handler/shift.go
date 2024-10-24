@@ -12,10 +12,10 @@ var cbServerErr = "oops, chatbot server error"
 
 var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string){
 	"getKeyboardOfOpenedShift": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return getKeyboardOfFlow(telegramStorage, 4)
+		return getKeyboardOfFlow(telegramStorage, msg, 4)
 	},
 	"getKeyboardOfClosedShift": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return getKeyboardOfFlow(telegramStorage, 5)
+		return getKeyboardOfFlow(telegramStorage, msg, 5)
 	},
 	"getLocationsKeyboard":     getLocationsKeyboard,
 	"handleUserChooseLocation": handleUserChooseLocation,
@@ -51,14 +51,18 @@ func HandleServerError() (string, string) {
 	return cbServerErr, ""
 }
 
-func getKeyboardOfFlow(telegramStorage storage.ITelegram, tgCbFlowId int) (string, string) {
+func getKeyboardOfFlow(telegramStorage storage.ITelegram, msg string, tgCbFlowId int) (string, string) {
 	cbFlowSteps, err := telegramStorage.GetCbFlowAllSteps(tgCbFlowId)
 	if err != nil {
 		log.Printf("chatbot_user_handler: Error getting cbFlowSteps: %v", err)
 		return cbServerErr, ""
 	}
 
-	return cbFlowSteps[0].Msg, cbFlowSteps[0].Keyboard
+	if msg == "" {
+		msg = cbFlowSteps[0].Msg
+	}
+
+	return msg, cbFlowSteps[0].Keyboard
 }
 
 func getLocationsKeyboard(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
@@ -165,6 +169,16 @@ func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, 
 	return "", ""
 }
 
-//func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-//	return handleRemainderProduct(1, telegramStorage, tgUser, msg)
-//}
+func HandleFlowTermination(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string, TgCbFlowId int) (bool, string, string) {
+	if TgCbFlowId == 3 && msg == "Cancel shift closing" {
+		err := telegramStorage.UpdateTgUserFlowStep(tgUser.ID, 0)
+		if err != nil {
+			log.Printf("chatbot_user_handler: UpdateTgUserFlowStep failed: %v", err)
+			answerMsg, answerKeyboard := HandleServerError()
+			return false, answerMsg, answerKeyboard
+		}
+		return true, "Shift closing terminated", "func:getKeyboardOfClosedShift"
+	}
+
+	return false, "", ""
+}
