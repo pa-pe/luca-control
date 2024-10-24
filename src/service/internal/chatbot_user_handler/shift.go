@@ -11,6 +11,7 @@ import (
 var cbServerErr = "oops, chatbot server error"
 
 var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string){
+	"getKeyboardOfOpenedShift": getKeyboardOfOpenedShift,
 	"getLocationsKeyboard":     getLocationsKeyboard,
 	"handleUserChooseLocation": handleUserChooseLocation,
 	"handleRemainderProduct(FrameA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
@@ -35,6 +36,19 @@ func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *mode
 
 func HandleServerError() (string, string) {
 	return cbServerErr, ""
+}
+
+func getKeyboardOfOpenedShift(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+	_ = tgUser
+	_ = msg
+
+	cbFlowSteps, err := telegramStorage.GetCbFlowAllSteps(5)
+	if err != nil {
+		log.Printf("chatbot_user_handler: Error getting cbFlowSteps: %v", err)
+		return cbServerErr, ""
+	}
+
+	return cbFlowSteps[0].Msg, cbFlowSteps[0].Keyboard
 }
 
 func getLocationsKeyboard(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
