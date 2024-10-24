@@ -6,3 +6,7 @@ type SrvsLocationList struct {
 	RowOrder       int    `gorm:"not null;default:0" json:"row_order"`
 	AddedTimestamp int64  `gorm:"autoCreateTime" json:"added_timestamp"`
 }
+
+func (SrvsLocationList) TableName() string {
+	return "srvs_location_list"
+}
