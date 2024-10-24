@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS tg_users (
     chatbot_permit TINYINT NOT NULL DEFAULT 0,
     srvs_employees_id INTEGER NOT NULL DEFAULT 0,
     tg_cb_flow_step_id INTEGER NOT NULL DEFAULT 0,
-    shift_state TINYINT NOT NULL DEFAULT 0,
     added_timestamp BIGINT NOT NULL DEFAULT (strftime('%s', 'now'))
 );
 
@@ -75,4 +74,10 @@ CREATE TABLE tg_cb_flow_steps (
 INSERT INTO tg_cb_flow_list (id, name, row_order, added_timestamp) VALUES (1, 'Shift start', 10, 1729539190);
 INSERT INTO tg_cb_flow_list (id, name, row_order, added_timestamp) VALUES (2, 'Sale', 20, 1729539318);
 INSERT INTO tg_cb_flow_list (id, name, row_order, added_timestamp) VALUES (3, 'Shift close', 30, 1729539433);
+INSERT INTO tg_cb_flow_list (id, name, row_order, added_timestamp) VALUES (4, 'Initial menu', 40, 1729739101);
 
+INSERT INTO tg_cb_flow_steps (id, tg_cb_flow_id, msg, keyboard, handler_name, row_order, added_timestamp) VALUES (1, 1, 'Choose your location', 'func:getLocationsKeyboard', 'handleUserChooseLocation', 10, 1729727117);
+INSERT INTO tg_cb_flow_steps (id, tg_cb_flow_id, msg, keyboard, handler_name, row_order, added_timestamp) VALUES (2, 1, 'Enter the remainder of Frame A', '', 'handleRemainderProduct(FrameA)', 20, 1729732871);
+INSERT INTO tg_cb_flow_steps (id, tg_cb_flow_id, msg, keyboard, handler_name, row_order, added_timestamp) VALUES (3, 1, 'Enter the remainder of Frame B', '', 'handleRemainderProduct(FrameB)', 30, 1729733731);
+INSERT INTO tg_cb_flow_steps (id, tg_cb_flow_id, msg, keyboard, handler_name, row_order, added_timestamp) VALUES (4, 1, 'Enter the remainder of Paper', '', 'handleRemainderProduct(Paper)', 40, 1729735056);
+INSERT INTO tg_cb_flow_steps (id, tg_cb_flow_id, msg, keyboard, handler_name, row_order, added_timestamp) VALUES (5, 4, 'Please tap menu button', 'Start shift', '', 10, 1729739392);

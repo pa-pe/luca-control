@@ -13,6 +13,7 @@ CREATE TABLE srvs_employees_list (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(255) NOT NULL,
     percentage           REAL NOT NULL,
+    srvs_shift_id INTEGER NOT NULL DEFAULT 0,
     added_timestamp BIGINT NOT NULL DEFAULT (strftime('%s', 'now'))
 );
 
