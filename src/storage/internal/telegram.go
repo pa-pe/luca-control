@@ -153,10 +153,10 @@ func (c *TelegramImpl) UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) 
 	return nil
 }
 
-func (c *TelegramImpl) GetSrvsLocationList() ([]model.SrvsLocationList, error) {
+func (c *TelegramImpl) GetSrvsLocationList(where string) ([]model.SrvsLocationList, error) {
 	var srvsLocationList []model.SrvsLocationList
 
-	if err := c.DB.Find(&srvsLocationList).Error; err != nil {
+	if err := c.DB.Debug().Where(where).Find(&srvsLocationList).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			//		fmt.Printf("UserID=%d not found\n", userID)
 			return nil, nil
