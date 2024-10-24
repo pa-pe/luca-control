@@ -5,13 +5,15 @@ import (
 	"github.com/pa-pe/luca-control/src/storage"
 	"github.com/pa-pe/luca-control/src/storage/model"
 	"log"
+	"strconv"
 )
 
 var cbServerErr = "oops, chatbot server error"
 
 var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string){
-	"getLocationsKeyboard":     getLocationsKeyboard,
-	"handleUserChooseLocation": handleUserChooseLocation,
+	"getLocationsKeyboard":           getLocationsKeyboard,
+	"handleUserChooseLocation":       handleUserChooseLocation,
+	"handleRemainderProduct(FrameA)": handleRemainderProductFrameA,
 }
 
 func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *model.TgUser, msg string) (string, string) {
@@ -78,5 +80,46 @@ func handleUserChooseLocation(telegramStorage storage.ITelegram, tgUser *model.T
 	}
 
 	// return empty if handler pass userdata
+	return "", ""
+}
+
+func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+	leftoverCount, err := strconv.Atoi(msg)
+	if err != nil {
+		return "Please enter just digit", ""
+	}
+
+	if strconv.Itoa(leftoverCount) != msg {
+		return "Please enter just digit", ""
+	}
+
+	// get srvsShiftId from srvsEmployee
+	srvsEmployeesList, err := telegramStorage.GetSrvsEmployeesList(fmt.Sprintf("id = %d", tgUser.SrvsEmployeesId))
+	if err != nil {
+		log.Printf("chatbot_user_handler: GetSrvsEmployeesList failed: %v", err)
+		return cbServerErr, ""
+	}
+	srvsShiftId := srvsEmployeesList[0].SrvsShiftId
+
+	// get SrvsLocationId from SrvsShifts
+	srvsShifts, err := telegramStorage.GetSrvsShifts(fmt.Sprintf("id = %d", srvsShiftId))
+	if err != nil {
+		log.Printf("chatbot_user_handler: GetSrvsShift failed: %v", err)
+		return cbServerErr, ""
+	}
+	srvsLocationId := srvsShifts[0].SrvsLocationId
+
+	var srvsLeftover = model.SrvsLeftovers{
+		SrvsShiftId:     srvsShiftId,
+		SrvsLocationId:  srvsLocationId,
+		SrvsGoodsId:     1,
+		SrvsEmployeesId: tgUser.SrvsEmployeesId,
+		QuantityStart:   leftoverCount,
+	}
+	_, err = telegramStorage.InsertSrvsLeftover(&srvsLeftover)
+	if err != nil {
+		return cbServerErr, ""
+	}
+
 	return "", ""
 }
