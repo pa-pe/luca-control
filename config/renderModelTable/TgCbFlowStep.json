@@ -11,5 +11,9 @@
   },
   "addableFields": ["Msg", "Keyboard", "HandlerName", "RowOrder"],
   "requiredFields": ["Msg", "RowOrder"],
-  "parent": { "modelName": "TgCbFlowList" }
+  "parent": {
+    "modelName": "TgCbFlowList",
+    "localConnectionField": "tg_cb_flow_id",
+    "queryVariableName": "TgCbFlowId"
+  }
 }
