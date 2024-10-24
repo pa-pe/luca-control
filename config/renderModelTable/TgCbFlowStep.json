@@ -4,10 +4,14 @@
   "pageTitle": "Telegram chatbot flow steps",
   "fields": ["ID", "TgCbFlowId", "Msg", "Keyboard", "HandlerName", "RowOrder", "AddedTimestamp"],
   "headers": {
-    "AddedTimestamp": "Date"
+    "AddedTimestamp": "Date",
+    "TgCbFlowId": "Flow"
   },
   "classes": {
     "AddedTimestamp": "timestamp"
+  },
+  "relatedData": {
+    "TgCbFlowId": "tg_cb_flow_list.name"
   },
   "addableFields": ["Msg", "Keyboard", "HandlerName", "RowOrder"],
   "requiredFields": ["Msg", "RowOrder"],
