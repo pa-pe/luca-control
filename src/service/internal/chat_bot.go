@@ -111,10 +111,32 @@ func (c *ChatBotImpl) msgRouter(tgMsg *model.TgMsg) (string, string) {
 			return c.handleUserContinueFlow(tgUser, msg)
 		}
 
-		if msg == "Start shift" {
-			return c.handleUserStartFlow(tgUser, 1)
+		// get srvsShiftId from srvsEmployee
+		srvsEmployeesList, err := c.TelegramStorage.GetSrvsEmployeesList(fmt.Sprintf("id = %d", tgUser.SrvsEmployeesId))
+		if err != nil {
+			log.Printf("chatbot_user_handler: GetSrvsEmployeesList failed: %v", err)
+			return chatbot_user_handler.HandleServerError()
+		}
+		srvsShiftId := srvsEmployeesList[0].SrvsShiftId
+
+		if srvsShiftId == 0 {
+			// if user shift closed
+			if msg == "Start shift" {
+				return c.handleUserStartFlow(tgUser, 1)
+			} else {
+				// menu of closed shift (initial menu)
+				return c.handleUserStartFlow(tgUser, 4)
+			}
 		} else {
-			return c.handleUserStartFlow(tgUser, 4)
+			// if user shift opened
+			if msg == "End shift" {
+				return c.handleUserStartFlow(tgUser, 3)
+			} else if msg == "Sale" {
+				return c.handleUserStartFlow(tgUser, 2)
+			} else {
+				// menu of opened shift
+				return c.handleUserStartFlow(tgUser, 5)
+			}
 		}
 	}
 
@@ -159,6 +181,12 @@ func (c *ChatBotImpl) handleUserStartFlow(tgUser *model.TgUser, tgCbFlowId int) 
 	tgCbFlowAllSteps, err := c.TelegramStorage.GetCbFlowAllSteps(tgCbFlowId)
 	if err != nil {
 		log.Printf("ChatBot handleUserStartFlow: GetCbFlowAllSteps error: %v", err)
+		return chatbot_user_handler.HandleServerError()
+	}
+
+	// flow not configured
+	if tgCbFlowAllSteps == nil {
+		log.Print("ChatBotFlow not configured")
 		return chatbot_user_handler.HandleServerError()
 	}
 
