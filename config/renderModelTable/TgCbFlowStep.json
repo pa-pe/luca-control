@@ -10,5 +10,6 @@
     "AddedTimestamp": "timestamp"
   },
   "addableFields": ["Msg", "Keyboard", "HandlerName", "RowOrder"],
-  "requiredFields": ["Msg", "RowOrder"]
+  "requiredFields": ["Msg", "RowOrder"],
+  "parent": { "modelName": "TgCbFlowList" }
 }
