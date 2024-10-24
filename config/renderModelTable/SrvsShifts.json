@@ -1,7 +1,15 @@
 {
-  "pageTitle": "Locations list",
+  "pageTitle": "Shifts",
   "fields": ["ID", "SrvsLocationId", "Date", "SrvsEmployeesId", "Salary", "Paid", "LeftToPay", "Tips", "QuantityPostCards", "QuantityPrints", "QuantityFeedbacks"],
+  "headers": {
+    "SrvsLocationId": "Location",
+    "SrvsEmployeesId": "Employee"
+  },
   "classes": {
     "Date": "timestamp"
+  },
+  "relatedData": {
+    "SrvsLocationId": "srvs_location_list.name",
+    "SrvsEmployeesId": "srvs_employees_list.name"
   }
 }
