@@ -206,7 +206,20 @@ func (c *ChatBotImpl) handleUserContinueFlow(tgUser *model.TgUser, msg string) (
 		return "", "" // keep silent in case of completion
 	}
 
-	return nextTgCbFlowStep.Msg, nextTgCbFlowStep.Keyboard
+	// next flow step
+	err = c.TelegramStorage.UpdateTgUserFlowStep(tgUser.ID, nextTgCbFlowStep.ID)
+	if err != nil {
+		log.Printf("ChatBot handleUserContinueFlow: UpdateTgUserFlowStep error: %v", err)
+		return chatbot_user_handler.HandleServerError()
+	}
+
+	keyboard := nextTgCbFlowStep.Keyboard
+	if keyboard == "" && currentTgCbFlowStep.Keyboard != "" {
+		// if there was a keyboard in the current step and there isn't one in the next step - send the keyboard removal command
+		keyboard = "remove"
+	}
+
+	return nextTgCbFlowStep.Msg, keyboard
 }
 
 //func (c *ChatBotImpl) handleUserFlowNextStep(tgUser *model.TgUser) (string, string) {
