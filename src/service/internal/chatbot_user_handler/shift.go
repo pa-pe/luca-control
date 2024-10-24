@@ -22,12 +22,6 @@ var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model
 	"handleRemainderProduct(Paper)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
 		return handleRemainderProduct(3, telegramStorage, tgUser, msg)
 	},
-	"handleRemainderProduct(SingleA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return handleRemainderProduct(4, telegramStorage, tgUser, msg)
-	},
-	"handleRemainderProduct(SingleB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return handleRemainderProduct(5, telegramStorage, tgUser, msg)
-	},
 }
 
 func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *model.TgUser, msg string) (string, string) {
