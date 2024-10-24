@@ -1,6 +1,11 @@
 {
-  "pageTitle": "Locations list",
-  "fields": ["ID",  "SrvsLocationId", "Date", "SrvsGoodsId", "SrvsEmployeesId", "QuantityStart", "QuantityEnd", "QuantitySell", "QuantityWrittenOff"],
+  "pageTitle": "Leftovers",
+  "fields": ["ID", "SrvsShiftId", "SrvsLocationId", "Date", "SrvsGoodsId", "SrvsEmployeesId", "QuantityStart", "QuantityEnd", "QuantitySell", "QuantityWrittenOff"],
+  "headers": {
+    "SrvsShiftId": "ShiftId",
+    "SrvsLocationId": "Location",
+    "SrvsEmployeesId": "Employee"
+  },
   "classes": {
     "Date": "timestamp"
   }
