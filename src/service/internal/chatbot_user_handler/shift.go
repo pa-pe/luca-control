@@ -11,10 +11,23 @@ import (
 var cbServerErr = "oops, chatbot server error"
 
 var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string){
-	"getLocationsKeyboard":           getLocationsKeyboard,
-	"handleUserChooseLocation":       handleUserChooseLocation,
-	"handleRemainderProduct(FrameA)": handleRemainderProductFrameA,
-	"handleRemainderProduct(FrameB)": handleRemainderProductFrameB,
+	"getLocationsKeyboard":     getLocationsKeyboard,
+	"handleUserChooseLocation": handleUserChooseLocation,
+	"handleRemainderProduct(FrameA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(1, telegramStorage, tgUser, msg)
+	},
+	"handleRemainderProduct(FrameB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(2, telegramStorage, tgUser, msg)
+	},
+	"handleRemainderProduct(Paper)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(3, telegramStorage, tgUser, msg)
+	},
+	"handleRemainderProduct(SingleA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(4, telegramStorage, tgUser, msg)
+	},
+	"handleRemainderProduct(SingleB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(5, telegramStorage, tgUser, msg)
+	},
 }
 
 func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *model.TgUser, msg string) (string, string) {
@@ -125,10 +138,6 @@ func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, 
 	return "", ""
 }
 
-func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-	return handleRemainderProduct(1, telegramStorage, tgUser, msg)
-}
-
-func handleRemainderProductFrameB(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-	return handleRemainderProduct(2, telegramStorage, tgUser, msg)
-}
+//func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+//	return handleRemainderProduct(1, telegramStorage, tgUser, msg)
+//}
