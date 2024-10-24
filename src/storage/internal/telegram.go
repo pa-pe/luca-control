@@ -75,9 +75,8 @@ func (c *TelegramImpl) CreateUserIfNotExist(tgUser *model.TgUser) (bool, error) 
 
 // InsertMsg returns inserted ID and error
 func (c *TelegramImpl) InsertMsg(tgMsg *model.TgMsg) (int64, error) {
-	db := c.DB
 	//	if err := db.Create(&tgMsg).Error; err != nil {
-	if result := db.Create(&tgMsg); result.Error != nil {
+	if result := c.DB.Create(&tgMsg); result.Error != nil {
 		log.Printf("InsertMsg error: %v", result.Error)
 		return tgMsg.InternalID, result.Error
 	}
@@ -156,7 +155,7 @@ func (c *TelegramImpl) UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) 
 func (c *TelegramImpl) GetSrvsLocationList(where string) ([]model.SrvsLocationList, error) {
 	var srvsLocationList []model.SrvsLocationList
 
-	if err := c.DB.Debug().Where(where).Find(&srvsLocationList).Error; err != nil {
+	if err := c.DB.Where(where).Find(&srvsLocationList).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			//		fmt.Printf("UserID=%d not found\n", userID)
 			return nil, nil
@@ -167,6 +166,20 @@ func (c *TelegramImpl) GetSrvsLocationList(where string) ([]model.SrvsLocationLi
 	}
 
 	return srvsLocationList, nil
+}
+func (c *TelegramImpl) InsertSrvsShift(srvsShift *model.SrvsShifts) (int, error) {
+	if result := c.DB.Create(&srvsShift); result.Error != nil {
+		log.Printf("InsertSrvsShift error: %v", result.Error)
+		return srvsShift.ID, result.Error
+	}
+	return 0, nil
+}
+
+func (c *TelegramImpl) UpdateEmployeeSrvsShiftId(srvsEmployeeId int64, srvsShiftId int) error {
+	if err := c.DB.Model(model.TgUser{}).Where("id", srvsEmployeeId).Update("srvs_shift_id", srvsShiftId).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewTelegramStorage(db *gorm.DB) *TelegramImpl {
