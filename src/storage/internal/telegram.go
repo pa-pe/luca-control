@@ -182,6 +182,44 @@ func (c *TelegramImpl) UpdateEmployeeSrvsShiftId(srvsEmployeeId int, srvsShiftId
 	return nil
 }
 
+func (c *TelegramImpl) InsertSrvsLeftover(srvsLeftover *model.SrvsLeftovers) (int, error) {
+	if result := c.DB.Create(&srvsLeftover); result.Error != nil {
+		log.Printf("InsertSrvsLeftover error: %v", result.Error)
+		return srvsLeftover.ID, result.Error
+	}
+	return 0, nil
+}
+
+func (c *TelegramImpl) GetSrvsEmployeesList(where string) ([]model.SrvsEmployeesList, error) {
+	var srvsEmployeesList []model.SrvsEmployeesList
+
+	if err := c.DB.Where(where).Find(&srvsEmployeesList).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			log.Printf("GetSrvsEmployeesList search error: %v", err)
+			return nil, err
+		}
+	}
+
+	return srvsEmployeesList, nil
+}
+
+func (c *TelegramImpl) GetSrvsShifts(where string) ([]model.SrvsShifts, error) {
+	var srvsShifts []model.SrvsShifts
+
+	if err := c.DB.Where(where).Find(&srvsShifts).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			log.Printf("GetSrvsShifts search error: %v", err)
+			return nil, err
+		}
+	}
+
+	return srvsShifts, nil
+}
+
 func NewTelegramStorage(db *gorm.DB) *TelegramImpl {
 	return &TelegramImpl{
 		DB: db,

@@ -23,6 +23,9 @@ type ITelegram interface {
 	GetSrvsLocationList(where string) ([]model.SrvsLocationList, error)
 	InsertSrvsShift(srvsShift *model.SrvsShifts) (int, error)
 	UpdateEmployeeSrvsShiftId(srvsEmployeeId int, srvsShiftId int) error
+	InsertSrvsLeftover(srvsLeftover *model.SrvsLeftovers) (int, error)
+	GetSrvsEmployeesList(where string) ([]model.SrvsEmployeesList, error)
+	GetSrvsShifts(where string) ([]model.SrvsShifts, error)
 }
 
 func NewStorages(db *gorm.DB) *Storages {
