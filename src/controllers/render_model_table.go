@@ -43,7 +43,7 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 	currentAuthUser := GetCurrentAuthUser(c)
 	modelName := c.Param("modelName")
 
-	config, err := loadModelConfig(c, modelName)
+	config, err := loadModelConfig(c, modelName, nil)
 	if err != nil {
 		log.Print("No configuration found for RenderModel: " + modelName)
 		c.String(http.StatusNotFound, "No configuration found for RenderModel: "+modelName)
@@ -65,7 +65,7 @@ func RenderModel(c *gin.Context, db *gorm.DB) {
 	})
 }
 
-func loadModelConfig(c *gin.Context, modelName string) (*modelConfig, error) {
+func loadModelConfig(c *gin.Context, modelName string, payload map[string]interface{}) (*modelConfig, error) {
 	configPath := "config/renderModelTable/" + modelName + ".json"
 
 	data, err := os.ReadFile(configPath)
@@ -87,9 +87,25 @@ func loadModelConfig(c *gin.Context, modelName string) (*modelConfig, error) {
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		config.ParentConfig, err = loadModelConfig(c, parentModelName)
+		config.ParentConfig, err = loadModelConfig(c, parentModelName, payload)
 		if err != nil {
 			log.Print("Can`t load ParentConfig: " + parentModelName)
+		}
+
+		if queryVariableName, exist := config.Parent["queryVariableName"]; exist {
+			//fmt.Println("queryVariableName=" + queryVariableName)
+			if payload != nil {
+				if value, exists := payload[queryVariableName].(string); exists {
+					config.Parent["queryVariableValue"] = value
+				}
+			} else {
+				if queryVariableValue, exist := c.GetQuery(queryVariableName); exist {
+					//fmt.Println("queryVariableValue=" + queryVariableValue)
+					config.Parent["queryVariableValue"] = queryVariableValue
+					//			} else {
+					//				config.Parent["queryVariableValue"] = ""
+				}
+			}
 		}
 	}
 
@@ -112,7 +128,7 @@ func breadcrumbBuilder(config *modelConfig) string {
 
 	if parentModelName, parentExists := config.Parent["modelName"]; parentExists {
 		//fmt.Println(parentModelName)
-		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/render_table/` + parentModelName + `"">` + config.ParentConfig.PageTitle + `</a></li>` + "\n"
+		breadcrumbStr += `    <li class="breadcrumb-item"><a href="/render_table/` + parentModelName + `">` + config.ParentConfig.PageTitle + `</a></li>` + "\n"
 	}
 
 	breadcrumbStr += `    <li class="breadcrumb-item active" aria-current="page">` + config.PageTitle + `</li>` + "\n"
@@ -137,7 +153,7 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 	htmlTable.WriteString(breadcrumbBuilder(config))
 	htmlTable.WriteString(RenderAddForm(config, modelName))
 
-	htmlTable.WriteString("<table class='table mt-3'>\n<thead><tr>")
+	htmlTable.WriteString("<table class='table mt-3'>\n<thead>\n<tr>\n")
 
 	for _, field := range config.Fields {
 		header := config.Headers[field]
@@ -147,21 +163,21 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 		if header == "" {
 			header = field
 		}
-		htmlTable.WriteString(fmt.Sprintf("<th>%s</th>", header))
+		htmlTable.WriteString(fmt.Sprintf("<th>%s</th>\n", header))
 	}
-	htmlTable.WriteString("</tr></thead>\n<tbody>")
+	htmlTable.WriteString("</tr>\n</thead>\n<tbody>\n")
 
 	relatedDataCache := make(map[string]string)
 
 	for _, record := range records {
-		htmlTable.WriteString("<tr>")
+		htmlTable.WriteString("<tr>\n")
 		for _, field := range config.Fields {
 			//value := record[field]
 			value, exists := record[field]
 			if !exists || value == nil {
 				value, exists = record[utils.InvertCaseStyle(field)]
 				if !exists || value == nil {
-					value = "" // Если значение отсутствует, выводим пустую строку
+					value = ""
 				}
 			}
 
@@ -214,7 +230,7 @@ func RenderModelTable(db *gorm.DB, modelName string, config *modelConfig) (strin
 				value = fmt.Sprintf("<a href='%s'>%v</a>", link, value)
 			}
 
-			htmlTable.WriteString(fmt.Sprintf("<td%s>%v</td>", classAttr, value))
+			htmlTable.WriteString(fmt.Sprintf("\t<td%s>%v</td>\n", classAttr, value))
 		}
 		htmlTable.WriteString("</tr>\n")
 	}
@@ -242,7 +258,7 @@ func HandleRenderTableAddRecord(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	config, err := loadModelConfig(c, modelName)
+	config, err := loadModelConfig(c, modelName, payload)
 	if err != nil {
 		log.Printf("No configuration found for model: %s", modelName)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No configuration found for model '" + modelName + "'"})
@@ -253,6 +269,12 @@ func HandleRenderTableAddRecord(c *gin.Context, db *gorm.DB) {
 	for _, field := range config.AddableFields {
 		if value, exists := payload[field]; exists {
 			insertData[utils.CamelToSnake(field)] = value
+		}
+	}
+
+	if localConnectionField, exists := config.Parent["localConnectionField"]; exists {
+		if queryVariableValue, exists := config.Parent["queryVariableValue"]; exists {
+			insertData[localConnectionField] = queryVariableValue
 		}
 	}
 
@@ -309,8 +331,13 @@ func RenderAddForm(config *modelConfig, modelName string) string {
 `)
 
 	formBuilder.WriteString(fmt.Sprintf(`<form id="addForm">
-        <input type="hidden" name="modelName" value="%s">
-`, modelName))
+        <input type="hidden" name="modelName" value="%s">`+"\n", modelName))
+
+	if queryVariableName, exists := config.Parent["queryVariableName"]; exists {
+		if queryVariableValue, exists := config.Parent["queryVariableValue"]; exists {
+			formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+"\n", queryVariableName, queryVariableValue))
+		}
+	}
 
 	for _, field := range config.AddableFields {
 		label := config.Headers[field]
@@ -335,7 +362,7 @@ func RenderAddForm(config *modelConfig, modelName string) string {
 
 	}
 
-	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Add</button></form>`)
-	formBuilder.WriteString(`</div></div></div>`)
+	formBuilder.WriteString(`<button type="submit" class="btn btn-primary">Add</button>` + "\n</form>\n")
+	formBuilder.WriteString("</div>\n</div>\n</div>\n")
 	return formBuilder.String()
 }
