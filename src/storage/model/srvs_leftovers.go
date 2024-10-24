@@ -2,6 +2,7 @@ package model
 
 type SrvsLeftovers struct {
 	ID                 int   `gorm:"primaryKey;autoIncrement" json:"id"`
+	SrvsShiftId        int   `gorm:"not null;default:0" json:"srvs_shift_id"`
 	SrvsLocationId     int   `gorm:"not null;default:0" json:"srvs_location_id"`
 	Date               int64 `gorm:"autoCreateTime" json:"date"`
 	SrvsGoodsId        int   `gorm:"not null;default:0" json:"srvs_goods_id"`

@@ -35,6 +35,7 @@ INSERT INTO srvs_goods_list (name, price) VALUES ('Single B', 20);
 
 CREATE TABLE srvs_leftovers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    srvs_shift_id INTEGER NOT NULL DEFAULT 0,
     srvs_location_id INTEGER NOT NULL DEFAULT 0,
     date BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
     srvs_goods_id INTEGER NOT NULL DEFAULT 0,
