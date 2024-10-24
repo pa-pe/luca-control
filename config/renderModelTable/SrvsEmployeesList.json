@@ -1,6 +1,6 @@
 {
   "pageTitle": "Employees list",
-  "fields": ["ID",  "Name", "Percentage", "AddedTimestamp"],
+  "fields": ["ID",  "Name", "Percentage", "SrvsShiftId", "AddedTimestamp"],
   "headers": {
     "AddedTimestamp": "Date"
   },
