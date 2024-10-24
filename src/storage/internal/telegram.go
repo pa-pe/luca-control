@@ -86,26 +86,71 @@ func (c *TelegramImpl) InsertMsg(tgMsg *model.TgMsg) (int64, error) {
 
 func (c *TelegramImpl) UpdateTgOutMsgIdAfterSend(tgMsgOut *model.TgMsg) error {
 	//	log.Printf("try to update tgMsgOut.internal_id=%d, set tg_id=%d, txt=%s\n", tgMsgOut.InternalID, tgMsgOut.TgID, tgMsgOut.Text)
-	db := c.DB
-	if err := db.Model(&tgMsgOut).Where("internal_id", tgMsgOut.InternalID).Update("tg_id", tgMsgOut.TgID).Update("date", time.Now().Unix()).Error; err != nil {
+	if err := c.DB.Model(&tgMsgOut).Where("internal_id", tgMsgOut.InternalID).Update("tg_id", tgMsgOut.TgID).Update("date", time.Now().Unix()).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *TelegramImpl) GetCbFlow(tgCbFlowId int) (*[]model.TgCbFlowStep, error) {
-	var tgCbFlow *[]model.TgCbFlowStep
-	if err := c.DB.Where("tgCbFlowId = ?", tgCbFlowId).Find(&tgCbFlow).Error; err != nil {
+func (c *TelegramImpl) GetCbFlowAllSteps(tgCbFlowId int) ([]model.TgCbFlowStep, error) {
+	var tgCbFlowAllSteps []model.TgCbFlowStep
+	if err := c.DB.Where("tgCbFlowId = ?", tgCbFlowId).Order("RowOrder").Find(&tgCbFlowAllSteps).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			//		fmt.Printf("UserID=%d not found\n", userID)
 			return nil, nil
 		} else {
-			log.Printf("User search error: %v", err)
+			log.Printf("tgCbFlow search error: %v", err)
 			return nil, err
 		}
 	}
 
-	return tgCbFlow, nil
+	return tgCbFlowAllSteps, nil
+}
+
+func (c *TelegramImpl) GetCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error) {
+	var tgCbFlowStep *model.TgCbFlowStep
+	if err := c.DB.Where("id = ?", tgCbFlowStepId).Find(&tgCbFlowStep).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			//		fmt.Printf("UserID=%d not found\n", userID)
+			return nil, nil
+		} else {
+			log.Printf("TgCbFlowStep search error: %v", err)
+			return nil, err
+		}
+	}
+
+	return tgCbFlowStep, nil
+}
+
+func (c *TelegramImpl) GetNextCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error) {
+	currentTgCbFlowStep, err := c.GetCbFlowStep(tgCbFlowStepId)
+	if err != nil {
+		log.Printf("GetNextCbFlowStep error: %v", err)
+		return nil, err
+	}
+
+	var nextTgCbFlowStep *model.TgCbFlowStep
+	if err := c.DB.Where("tg_cb_flow_id = ?", currentTgCbFlowStep.TgCbFlowId).
+		Where("row_order > ?", currentTgCbFlowStep.RowOrder).
+		Order("row_order").
+		First(&nextTgCbFlowStep).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			//		fmt.Printf("UserID=%d not found\n", userID)
+			return nil, nil
+		} else {
+			log.Printf("TgCbFlowStep search error: %v", err)
+			return nil, err
+		}
+	}
+
+	return nextTgCbFlowStep, nil
+}
+
+func (c *TelegramImpl) UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) error {
+	if err := c.DB.Model(model.TgUser{}).Where("id", tgUserId).Update("tg_cb_flow_step_id", tgCbFlowStepId).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewTelegramStorage(db *gorm.DB) *TelegramImpl {

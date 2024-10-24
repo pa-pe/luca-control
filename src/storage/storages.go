@@ -16,7 +16,10 @@ type ITelegram interface {
 	CreateUserIfNotExist(tgUser *model.TgUser) (bool, error)
 	InsertMsg(tgMsg *model.TgMsg) (int64, error)
 	UpdateTgOutMsgIdAfterSend(tgMsg *model.TgMsg) error
-	GetCbFlow(tgCbFlowId int) (*[]model.TgCbFlowStep, error)
+	GetCbFlowAllSteps(tgCbFlowId int) ([]model.TgCbFlowStep, error)
+	GetCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error)
+	GetNextCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error)
+	UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) error
 }
 
 func NewStorages(db *gorm.DB) *Storages {
