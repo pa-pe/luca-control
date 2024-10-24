@@ -14,6 +14,7 @@ var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model
 	"getLocationsKeyboard":           getLocationsKeyboard,
 	"handleUserChooseLocation":       handleUserChooseLocation,
 	"handleRemainderProduct(FrameA)": handleRemainderProductFrameA,
+	"handleRemainderProduct(FrameB)": handleRemainderProductFrameB,
 }
 
 func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *model.TgUser, msg string) (string, string) {
@@ -21,8 +22,8 @@ func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *mode
 		return function(telegramStorage, tgUser, msg)
 	} else {
 		log.Printf("chatbot_user_handler: Function '%s' not found!", functionName)
+		return cbServerErr, ""
 	}
-	return "", ""
 }
 
 func HandleServerError() (string, string) {
@@ -83,7 +84,7 @@ func handleUserChooseLocation(telegramStorage storage.ITelegram, tgUser *model.T
 	return "", ""
 }
 
-func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
 	leftoverCount, err := strconv.Atoi(msg)
 	if err != nil {
 		return "Please enter just digit", ""
@@ -112,7 +113,7 @@ func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *mod
 	var srvsLeftover = model.SrvsLeftovers{
 		SrvsShiftId:     srvsShiftId,
 		SrvsLocationId:  srvsLocationId,
-		SrvsGoodsId:     1,
+		SrvsGoodsId:     srvsGoodsId,
 		SrvsEmployeesId: tgUser.SrvsEmployeesId,
 		QuantityStart:   leftoverCount,
 	}
@@ -122,4 +123,12 @@ func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *mod
 	}
 
 	return "", ""
+}
+
+func handleRemainderProductFrameA(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+	return handleRemainderProduct(1, telegramStorage, tgUser, msg)
+}
+
+func handleRemainderProductFrameB(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+	return handleRemainderProduct(2, telegramStorage, tgUser, msg)
 }
