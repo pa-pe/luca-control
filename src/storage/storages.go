@@ -20,6 +20,7 @@ type ITelegram interface {
 	GetCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error)
 	GetNextCbFlowStep(tgCbFlowStepId int) (*model.TgCbFlowStep, error)
 	UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) error
+	GetSrvsLocationList() ([]model.SrvsLocationList, error)
 }
 
 func NewStorages(db *gorm.DB) *Storages {
