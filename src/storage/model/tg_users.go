@@ -8,9 +8,9 @@ type TgUser struct {
 	LanguageCode    string `gorm:"type:char(2);not null" json:"language_code"`
 	IsBot           bool   `gorm:"not null;default:0" json:"is_bot,omitempty"`
 	ChatbotPermit   byte   `gorm:"not null;default:0" json:"chatbot_permit"`
-	TgCbFlowStepId  int    `gorm:"not null" json:"tg_cb_flow_step_id"`
-	SrvsEmployeesId int    `gorm:"not null" json:"srvs_employees_id"`
-	ShiftState      byte   `gorm:"not null;default:0" json:"shift_state"`
+	SrvsEmployeesId int    `gorm:"not null;default:0" json:"srvs_employees_id"`
+	TgCbFlowStepId  int    `gorm:"not null;default:0" json:"tg_cb_flow_step_id"`
+	SrvsShiftId     int    `gorm:"not null;default:0" json:"srvs_shift_id"`
 	AddedTimestamp  int64  `gorm:"autoCreateTime" json:"added_timestamp"`
 }
 
