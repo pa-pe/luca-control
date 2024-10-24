@@ -11,19 +11,32 @@ import (
 var cbServerErr = "oops, chatbot server error"
 
 var functions = map[string]func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string){
-	"getKeyboardOfOpenedShift": getKeyboardOfOpenedShift,
+	"getKeyboardOfOpenedShift": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return getKeyboardOfFlow(telegramStorage, 4)
+	},
+	"getKeyboardOfClosedShift": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return getKeyboardOfFlow(telegramStorage, 5)
+	},
 	"getLocationsKeyboard":     getLocationsKeyboard,
 	"handleUserChooseLocation": handleUserChooseLocation,
-	"handleRemainderProduct(FrameA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return handleRemainderProduct(1, telegramStorage, tgUser, msg)
+	"handleRemainderProduct(OpenShift,FrameA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(1, telegramStorage, tgUser, msg, "open")
 	},
-	"handleRemainderProduct(FrameB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return handleRemainderProduct(2, telegramStorage, tgUser, msg)
+	"handleRemainderProduct(OpenShift,FrameB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(2, telegramStorage, tgUser, msg, "open")
 	},
-	"handleRemainderProduct(Paper)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-		return handleRemainderProduct(3, telegramStorage, tgUser, msg)
+	"handleRemainderProduct(OpenShift,Paper)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(3, telegramStorage, tgUser, msg, "open")
 	},
-}
+	"handleRemainderProduct(CloseShift,FrameA)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(1, telegramStorage, tgUser, msg, "close")
+	},
+	"handleRemainderProduct(CloseShift,FrameB)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(2, telegramStorage, tgUser, msg, "close")
+	},
+	"handleRemainderProduct(CloseShift,Paper)": func(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+		return handleRemainderProduct(3, telegramStorage, tgUser, msg, "close")
+	}}
 
 func Handle(telegramStorage storage.ITelegram, functionName string, tgUser *model.TgUser, msg string) (string, string) {
 	if function, exists := functions[functionName]; exists {
@@ -38,11 +51,8 @@ func HandleServerError() (string, string) {
 	return cbServerErr, ""
 }
 
-func getKeyboardOfOpenedShift(telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
-	_ = tgUser
-	_ = msg
-
-	cbFlowSteps, err := telegramStorage.GetCbFlowAllSteps(5)
+func getKeyboardOfFlow(telegramStorage storage.ITelegram, tgCbFlowId int) (string, string) {
+	cbFlowSteps, err := telegramStorage.GetCbFlowAllSteps(tgCbFlowId)
 	if err != nil {
 		log.Printf("chatbot_user_handler: Error getting cbFlowSteps: %v", err)
 		return cbServerErr, ""
@@ -105,7 +115,7 @@ func handleUserChooseLocation(telegramStorage storage.ITelegram, tgUser *model.T
 	return "", ""
 }
 
-func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string) (string, string) {
+func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, tgUser *model.TgUser, msg string, shiftAction string) (string, string) {
 	leftoverCount, err := strconv.Atoi(msg)
 	if err != nil {
 		return "Please enter just digit", ""
@@ -136,8 +146,17 @@ func handleRemainderProduct(srvsGoodsId int, telegramStorage storage.ITelegram, 
 		SrvsLocationId:  srvsLocationId,
 		SrvsGoodsId:     srvsGoodsId,
 		SrvsEmployeesId: tgUser.SrvsEmployeesId,
-		QuantityStart:   leftoverCount,
 	}
+
+	if shiftAction == "open" {
+		srvsLeftover.QuantityStart = leftoverCount
+	} else if shiftAction == "close" {
+		srvsLeftover.QuantityEnd = leftoverCount
+	} else {
+		log.Printf(`chatbot_user_handler: handleRemainderProduct unknown shiftAction="%s" expected "open" or "close"`, shiftAction)
+		return cbServerErr, ""
+	}
+
 	_, err = telegramStorage.InsertSrvsLeftover(&srvsLeftover)
 	if err != nil {
 		return cbServerErr, ""
