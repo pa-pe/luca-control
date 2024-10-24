@@ -22,7 +22,7 @@ type ITelegram interface {
 	UpdateTgUserFlowStep(tgUserId int64, tgCbFlowStepId int) error
 	GetSrvsLocationList(where string) ([]model.SrvsLocationList, error)
 	InsertSrvsShift(srvsShift *model.SrvsShifts) (int, error)
-	UpdateEmployeeSrvsShiftId(srvsEmployeeId int64, srvsShiftId int) error
+	UpdateEmployeeSrvsShiftId(srvsEmployeeId int, srvsShiftId int) error
 }
 
 func NewStorages(db *gorm.DB) *Storages {

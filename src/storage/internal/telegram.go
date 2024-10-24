@@ -175,8 +175,8 @@ func (c *TelegramImpl) InsertSrvsShift(srvsShift *model.SrvsShifts) (int, error)
 	return 0, nil
 }
 
-func (c *TelegramImpl) UpdateEmployeeSrvsShiftId(srvsEmployeeId int64, srvsShiftId int) error {
-	if err := c.DB.Model(model.TgUser{}).Where("id", srvsEmployeeId).Update("srvs_shift_id", srvsShiftId).Error; err != nil {
+func (c *TelegramImpl) UpdateEmployeeSrvsShiftId(srvsEmployeeId int, srvsShiftId int) error {
+	if err := c.DB.Model(model.SrvsEmployeesList{}).Where("id", srvsEmployeeId).Update("srvs_shift_id", srvsShiftId).Error; err != nil {
 		return err
 	}
 	return nil
