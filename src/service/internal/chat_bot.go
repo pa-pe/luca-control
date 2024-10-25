@@ -214,15 +214,25 @@ func (c *ChatBotImpl) handleUserContinueFlow(tgUser *model.TgUser, msg string) (
 		return answerMsg, answerKeyboard
 	}
 
+	// handle current step
 	if currentTgCbFlowStep.HandlerName != "" {
-		msg, keyboard := chatbot_user_handler.Handle(c.TelegramStorage, currentTgCbFlowStep.HandlerName, tgUser, msg)
-		if msg != "" || keyboard != "" {
-			// chatbot_user_handler return msg if it can't recognize user msg or other error
-			return msg, keyboard
+		//msg, keyboard := chatbot_user_handler.Handle(c.TelegramStorage, currentTgCbFlowStep.HandlerName, tgUser, msg)
+		//if msg != "" || keyboard != "" {
+		//	// chatbot_user_handler return msg if it can't recognize user msg or other error
+		//	return msg, keyboard
+		//}
+		handlerNames := strings.Split(currentTgCbFlowStep.HandlerName, ";")
+		for _, handlerName := range handlerNames {
+			handlerName = strings.Trim(handlerName, " \n")
+			msg, keyboard := chatbot_user_handler.Handle(c.TelegramStorage, handlerName, tgUser, msg)
+			if msg != "" || keyboard != "" {
+				// chatbot_user_handler return msg if it can't recognize user msg or other error
+				return msg, keyboard
+			}
 		}
 	}
 
-	// continue next steps
+	// get next flow steps
 	nextTgCbFlowStep, err := c.TelegramStorage.GetNextCbFlowStep(tgUser.TgCbFlowStepId)
 	if err != nil {
 		log.Printf("ChatBot handleUserContinueFlow: GetNextCbFlowStep error: %v", err)
